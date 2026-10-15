@@ -1,0 +1,97 @@
+"""Application settings, read from environment variables (and .env in local dev)."""
+
+from __future__ import annotations
+
+from functools import lru_cache
+from typing import Literal
+
+from pydantic import Field
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+class Settings(BaseSettings):
+    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
+
+    # --- Runtime ---
+    env: Literal["dev", "test", "prod"] = "dev"
+    log_level: str = "INFO"
+    cors_origins: list[str] = Field(default_factory=lambda: ["http://localhost:3000"])
+
+    # --- Google Cloud ---
+    google_cloud_project: str = ""
+    google_cloud_location: str = "global"  # Gemini endpoint location
+    gcs_bucket: str = ""  # uploads bucket; empty = keep uploads in memory (dev only)
+
+    # --- AI ---
+    # "gemini" calls Gemini on Gemini Enterprise Agent Platform; "fake" runs fully offline (tests, local UI work).
+    llm_backend: Literal["gemini", "fake"] = "fake"
+    model_fast: str = "gemini-3.8-flash"
+    model_pro: str = "gemini-3.1-pro-preview"
+    model_tts: str = "gemini-3.8-flash-lite-tts"
+    tts_voice: str = "Kore"
+
+    # --- Storage ---
+    store_backend: Literal["memory", "firestore"] = "memory"
+    graph_backend: Literal["memory", "spanner"] = "memory"
+    spanner_instance: str = ""
+    spanner_database: str = ""
+
+    # --- Security ---
+    auth_mode: Literal["dev", "firebase"] = "dev"
+    # Secret used to hash phone/account numbers for the integrity network and to sign evidence locally.
+    # In production this comes from Secret Manager, never from code.
+    hash_salt: str = "dev-only-salt-change-me"
+    evidence_signing_key: str = "dev-only-signing-key-change-me"
+    kms_key_version: str = ""  # projects/.../cryptoKeyVersions/1 ; empty = local HMAC signing
+    use_sensitive_data_protection: bool = False
+    model_armor_template: str = ""  # projects/P/locations/L/templates/T ; empty = local heuristic screen
+    scheduler_audience: str = ""  # expected OIDC audience for Cloud Scheduler calls to /api/cases/tick
+    scheduler_service_account: str = ""  # expected caller email on the scheduler's OIDC token
+
+    # --- Uploads ---
+    max_upload_mb: int = 12
+    max_files_per_request: int = 8
+
+    # --- Data ---
+    packs_dir: str = ""  # empty = bundled packs
+    recruiters_csv: str = ""  # empty = bundled fictional sample
+
+    # --- A2A ---
+    partner_agent_card_url: str = ""  # a legal-aid partner's A2A agent card
+
+    @property
+    def is_prod(self) -> bool:
+        return self.env == "prod"
+
+    def validate_for_prod(self) -> list[str]:
+        """Return a list of configuration problems that must be fixed before serving production traffic."""
+        problems: list[str] = []
+        if self.auth_mode != "firebase":
+            problems.append("AUTH_MODE must be 'firebase' in prod")
+        if self.hash_salt.startswith("dev-only") or self.evidence_signing_key.startswith("dev-only"):
+            problems.append("HASH_SALT and EVIDENCE_SIGNING_KEY must come from Secret Manager in prod")
+        if self.llm_backend != "gemini":
+            problems.append("LLM_BACKEND must be 'gemini' in prod")
+        if self.store_backend != "firestore":
+            problems.append("STORE_BACKEND must be 'firestore' in prod")
+        if not self.google_cloud_project:
+            problems.append("GOOGLE_CLOUD_PROJECT is required in prod")
+        return problems
+
+
+@lru_cache
+def get_settings() -> Settings:
+    return Settings()
+
+
+def export_genai_env(settings: Settings) -> None:
+    """The ADK agents build their own google-genai client from environment variables, and
+    pydantic-settings does not copy .env values into the environment. Hand them over explicitly;
+    values already set in the real environment (Cloud Run) win."""
+    import os
+
+    if settings.llm_backend != "gemini" or not settings.google_cloud_project:
+        return
+    os.environ.setdefault("GOOGLE_CLOUD_PROJECT", settings.google_cloud_project)
+    os.environ.setdefault("GOOGLE_CLOUD_LOCATION", settings.google_cloud_location)
+    os.environ.setdefault("GOOGLE_GENAI_USE_ENTERPRISE", "true")
