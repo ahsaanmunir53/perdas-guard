@@ -119,6 +119,27 @@ npm run build          # static site in frontend/out
 npm run preview        # open http://localhost:4173
 ```
 
+## Settings files
+
+Three places hold settings. Only the first is needed for the live app.
+
+| File | Needed for | What goes in it |
+|---|---|---|
+| `frontend/.env.local` | The live app (Firebase) | The four Firebase web app values (step 4 below). Copy it from `frontend/.env.example`. |
+| `backend/.env` | The API on your computer | At $0 only `LLM_BACKEND=auto` and `GEMINI_API_KEY`; the rest can stay as in `backend/.env.example`, whose sections say which values are for the paid production design and stay empty. |
+| Render dashboard | The API sandbox on Render | `render.yaml` sets everything; only `GEMINI_API_KEY` is typed in. |
+
+The AI switches by itself in both builds. The live app tries Gemini through Firebase AI Logic and,
+when it is out of quota, unreachable or not set up, says so and carries on with the rules and the
+typed form. The API does the same with `LLM_BACKEND=auto`: a paper Gemini could not read is marked
+"could not be read just now", so its result is never green, and Gemini is tried again after
+`AI_COOLDOWN_SECONDS`. `LLM_BACKEND=fake` is only for the tests.
+
+What Firebase gives at $0 (Spark plan), and what this app uses: Hosting, Authentication (Google
+sign-in; guests need no account), Firestore and AI Logic. Not on Spark: Cloud Storage (so vault files
+stay on the phone), Cloud Functions (so case steps move when the app opens) and phone number (SMS)
+sign-in. Email and password sign-in is free on Spark too, but the app has no screen for it yet.
+
 ## Put it online
 
 Follow the steps in order. Nothing here costs money if the project stays on the free (Spark) plan.
@@ -130,17 +151,17 @@ npm install -g firebase-tools
 firebase login
 ```
 
-**2. Keep the project on the free plan.** If the Google Cloud project `pardes-guard` has billing linked,
+**2. Keep the project on the free plan.** The team's Firebase project is `pardes-ea3e1`. If it has billing linked,
 unlink it (needs the gcloud CLI), then check that the Firebase console shows "Spark" at the bottom of
 the left menu:
 
 ```bash
-gcloud billing projects unlink pardes-guard
+gcloud billing projects unlink pardes-ea3e1
 ```
 
 **3. Switch on the Firebase services** at https://console.firebase.google.com:
 
-- Add project, and choose the existing Google Cloud project `pardes-guard`.
+- Open the project `pardes-ea3e1` (it exists already, with its web app registered).
 - Authentication > Get started > Sign-in method > Google > Enable > choose a support email > Save.
 - Firestore Database > Create database > pick a location near the users (for example `asia-south1`,
   Mumbai; it cannot be changed later) > Start in production mode. The real rules are deployed in step 6.
@@ -164,13 +185,15 @@ cp .env.example .env.local
 | `appId` | `NEXT_PUBLIC_FIREBASE_APP_ID=` |
 
 Leave `NEXT_PUBLIC_GROUNDING=off`. These values are public by design (they end up in the page);
-`.env.local` is git-ignored anyway. Never put a service-account key anywhere in this repository.
+`.env.local` is git-ignored anyway. Never put a service-account key anywhere in this repository. Do
+not add website (HTTP referrer) restrictions to this API key: the site sends no `Referer` header
+(`Referrer-Policy: no-referrer` in `firebase.json`), so a key restricted that way refuses every request.
 
 **5. Point the CLI at the project** (once, from the repository root). This writes `.firebaserc`, which
 git ignores:
 
 ```bash
-firebase use --add      # pick pardes-guard, and give it the alias "default"
+firebase use --add      # pick pardes-ea3e1, and give it the alias "default"
 ```
 
 (Or copy `.firebaserc.example` to `.firebaserc` and put the project id in it.)
@@ -200,6 +223,10 @@ an admin can replace the licensed list.
 real test of each:
 
 - [ ] More > Sign in > Google: you are signed in, and your journey is still there. Then sign out.
+  This is the first thing to check: `firebase.json` sends `X-Frame-Options: DENY` on every page, and
+  whether that also reaches Firebase's own sign-in helper pages (`/__/auth/...`) has not been tested.
+  If the Google window closes at once or the console mentions a frame, delete the `X-Frame-Options`
+  entry from `firebase.json` and run `firebase deploy --only hosting` again.
 - [ ] Check > one of the samples: the result says AI read the paper and the stamp lands.
 - [ ] Check > a photo of a printed test paper of your own (never a real person's document).
 - [ ] Assistant: type a question about Saudi Arabia; links appear under the answer.

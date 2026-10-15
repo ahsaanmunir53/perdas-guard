@@ -13,6 +13,7 @@ import uuid
 from datetime import datetime, timezone
 
 from app.llm.base import LLM, DocumentReading
+from app.llm.resilient import ReaderUnavailable
 from app.packs import PackRegistry
 from app.schemas import CheckContext, ExtractedDocument, NetworkSignals, User, Verdict, WorkerStatement
 from app.services import rules
@@ -56,12 +57,18 @@ class CheckPipeline:
 
     async def _read_one(self, idx: int, file: ValidatedFile, context: CheckContext, sem: asyncio.Semaphore) -> ExtractedDocument:
         async with sem:
+            unread = False
             try:
                 reading = await self._llm.read_document(file, context)
+            except ReaderUnavailable:
+                log.info("Document %d not read: no AI reader is available", idx)
+                reading = DocumentReading(doc_type="other", confidence=0.0)
+                unread = True
             except Exception:
                 log.warning("Reading document %d failed", idx, exc_info=True)
                 reading = DocumentReading(doc_type="other", confidence=0.0)
-        doc = ExtractedDocument(doc_id=f"doc_{idx + 1}", **reading.model_dump())
+                unread = True
+        doc = ExtractedDocument(doc_id=f"doc_{idx + 1}", unread=unread, **reading.model_dump())
         # Screen the original text for text uploads; for images/PDFs screen what the model transcribed.
         source_text = file.data.decode("utf-8", errors="replace") if file.mime_type == "text/plain" else ""
         screened: ScreenResult = self._screen(

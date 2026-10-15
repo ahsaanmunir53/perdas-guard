@@ -34,6 +34,11 @@ const PAGES: [string, Record<string, unknown>][] = [
   ["/admin/", { ...cases, "pg.demoRole": "admin" }],
 ];
 
+// The stamp lands from 1.7 times its size, and it can mount after the page is live (when the journey
+// has loaded), so its first frames could be measured as overflow. They are clipped by the column and
+// are not part of the layout; with reduced motion the stamp simply appears.
+test.use({ contextOptions: { reducedMotion: "reduce" } });
+
 for (const locale of ["en", "ur"]) {
   test(`${locale}: text at 200% never makes a screen wider than the phone`, async ({ page }) => {
     test.setTimeout(120_000);
@@ -42,15 +47,6 @@ for (const locale of ["en", "ur"]) {
       await seed(page, storage);
       await page.goto(`/${locale}${path}`);
       await page.addStyleTag({ content: "html { font-size: 200% !important; }" });
-      // A stamp lands from 1.7 times its size (clipped by the column); measure once it has landed.
-      await page.evaluate(() =>
-        Promise.all(
-          document
-            .getAnimations()
-            .filter((a) => a.effect?.getComputedTiming().endTime !== Infinity)
-            .map((a) => a.finished.catch(() => undefined)),
-        ),
-      );
       await page.waitForTimeout(100);
       const over = await page.evaluate(() => {
         const width = document.documentElement.clientWidth;

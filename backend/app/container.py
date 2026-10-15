@@ -45,6 +45,15 @@ def _llm(settings: Settings) -> LLM:
         from app.llm.gemini import GeminiLLM
 
         return GeminiLLM(settings)
+    if settings.llm_backend == "auto":
+        from app.llm.resilient import ResilientLLM
+
+        if not settings.gemini_configured:
+            log.warning("LLM_BACKEND=auto with no GEMINI_API_KEY or GOOGLE_CLOUD_PROJECT: offline path only")
+            return ResilientLLM(None)
+        from app.llm.gemini import GeminiLLM
+
+        return ResilientLLM(GeminiLLM(settings), cooldown_seconds=settings.ai_cooldown_seconds)
     from app.llm.fake import FakeLLM
 
     return FakeLLM()

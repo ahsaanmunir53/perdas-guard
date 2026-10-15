@@ -62,7 +62,7 @@ def create_app(settings: Settings | None = None, container: Container | None = N
         app.state.container = c
         if guardian is not None:
             app.state.guardian = guardian
-        elif settings.llm_backend == "gemini":
+        elif settings.uses_gemini:
             from app.agents.guardian import GuardianChat
 
             export_genai_env(settings)
@@ -120,6 +120,8 @@ def create_app(settings: Settings | None = None, container: Container | None = N
         c: Container = request.app.state.container
         return {
             "llm": c.llm.name,
+            # False while Gemini is skipped after a quota or network failure (LLM_BACKEND=auto).
+            "llm_online": getattr(c.llm, "online", c.llm.name != "fake"),
             "graph": graph_target(c.settings),
             "assistant": request.app.state.guardian is not None,
             "recruiter_list": {"source": c.recruiters.source, "count": c.recruiters.count()},

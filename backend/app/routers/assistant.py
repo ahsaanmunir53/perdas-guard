@@ -32,14 +32,24 @@ class ChatResponse(BaseModel):
 def _chat(request: Request):
     chat = getattr(request.app.state, "guardian", None)
     if chat is None:
-        raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, "The assistant needs LLM_BACKEND=gemini")
+        raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, "The assistant needs Gemini: set GEMINI_API_KEY with LLM_BACKEND=auto or gemini")
     return chat
+
+
+async def _send(request: Request, *args, **kwargs):
+    try:
+        return await _chat(request).send(*args, **kwargs)
+    except HTTPException:
+        raise
+    except Exception as exc:
+        # Out of free quota or unreachable: say so, instead of a server error.
+        raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, "The assistant cannot reach Gemini right now. Try again in a minute.") from exc
 
 
 @router.post("/chat", response_model=ChatResponse)
 async def chat(body: ChatRequest, request: Request, user: User = Depends(current_user)) -> ChatResponse:
     check_limiter.check(client_key(request))
-    turn = await _chat(request).send(user, body.message, body.language, body.session_id)
+    turn = await _send(request, user, body.message, body.language, body.session_id)
     return ChatResponse(session_id=turn.session_id, reply=turn.reply, tools_used=turn.tools_used)
 
 
@@ -57,7 +67,7 @@ async def voice(
     file = await read_upload(audio, c.settings.max_upload_mb * 1024 * 1024)
     if not file.is_audio:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "Send an audio file")
-    turn = await _chat(request).send(user, None, language, session_id, audio=(file.data, file.mime_type))
+    turn = await _send(request, user, None, language, session_id, audio=(file.data, file.mime_type))
     wav = await c.llm.speak(turn.reply, language) if speak else None
     return ChatResponse(
         session_id=turn.session_id,

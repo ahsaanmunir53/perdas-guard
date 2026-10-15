@@ -209,7 +209,9 @@ test("simple mode makes the text bigger and keeps three choices, and stays after
   await page.goto("/en/home/");
   const homeChoices = page.locator("section[aria-labelledby='home-more'] li");
   await expect(homeChoices).toHaveCount(4);
-  const size = () => page.evaluate(() => parseFloat(getComputedStyle(document.querySelector("main p")!).fontSize));
+  // The body text size, which every paragraph follows (the first paragraph on screen can change while
+  // the page loads, so it is not a fair measure).
+  const size = () => page.evaluate(() => parseFloat(getComputedStyle(document.body).fontSize));
   const before = await size();
 
   await page.goto("/en/more/");

@@ -5,7 +5,8 @@
 
 Prints which graph and AI model the app uses, the verdict with every flag, the recruiter's network
 risk, whether the hidden instruction in the offer was caught, and whether the check was saved for its
-owner. Uses the real AI model when LLM_BACKEND=gemini (one reading, from your quota). Run from backend/.
+owner. Uses the real AI model when LLM_BACKEND is gemini, or auto with a key (one reading, from your
+free quota). Run from backend/.
 """
 
 from __future__ import annotations

@@ -23,9 +23,14 @@ class Settings(BaseSettings):
     gcs_bucket: str = ""  # uploads bucket; empty = keep uploads in memory (dev only)
 
     # --- AI ---
-    # "gemini" uses real Gemini API calls; "fake" uses simulated offline responses.
+    # auto: Gemini when GEMINI_API_KEY (or GOOGLE_CLOUD_PROJECT) is set and Gemini answers; otherwise,
+    #       call by call, the offline path (papers marked unread, template explanations and letters).
+    # gemini: Gemini only; a failed call surfaces as it is (for debugging).
+    # fake: the test fixtures' reader, fully offline. For tests only: it does not read real papers.
     gemini_api_key: str = ""
-    llm_backend: Literal["gemini", "fake"] = "fake"
+    llm_backend: Literal["auto", "gemini", "fake"] = "fake"
+    # After Gemini is out of quota or unreachable, how long to use the offline path before trying again.
+    ai_cooldown_seconds: int = 60
     model_fast: str = "gemini-3.8-flash"
     model_pro: str = "gemini-3.1-pro-preview"
     model_tts: str = "gemini-3.8-flash-lite-tts"
@@ -74,6 +79,15 @@ class Settings(BaseSettings):
     def is_prod(self) -> bool:
         return self.env == "prod"
 
+    @property
+    def gemini_configured(self) -> bool:
+        """A Gemini key or a Google Cloud project is set, so Gemini can be tried."""
+        return bool(self.gemini_api_key or self.google_cloud_project)
+
+    @property
+    def uses_gemini(self) -> bool:
+        return self.llm_backend == "gemini" or (self.llm_backend == "auto" and self.gemini_configured)
+
     def validate_for_prod(self) -> list[str]:
         """Return a list of configuration problems that must be fixed before serving production traffic."""
         problems: list[str] = []
@@ -81,8 +95,8 @@ class Settings(BaseSettings):
             problems.append("AUTH_MODE must be 'firebase' in prod")
         if self.hash_salt.startswith("dev-only") or self.evidence_signing_key.startswith("dev-only"):
             problems.append("HASH_SALT and EVIDENCE_SIGNING_KEY must come from Secret Manager in prod")
-        if self.llm_backend != "gemini":
-            problems.append("LLM_BACKEND must be 'gemini' in prod")
+        if self.llm_backend not in ("gemini", "auto"):
+            problems.append("LLM_BACKEND must be 'gemini' or 'auto' in prod")
         if self.store_backend != "firestore":
             problems.append("STORE_BACKEND must be 'firestore' in prod")
         if not self.google_cloud_project:
@@ -113,7 +127,7 @@ def export_genai_env(settings: Settings) -> None:
     import os
 
     # Offline mode: don't configure Gemini authentication.
-    if settings.llm_backend != "gemini":
+    if settings.llm_backend not in ("gemini", "auto"):
         return
 
     # Option 1: Gemini API key (local development / AI Studio).
@@ -134,6 +148,8 @@ def export_genai_env(settings: Settings) -> None:
         os.environ["GOOGLE_GENAI_USE_VERTEXAI"] = "true"
         return
 
+    if settings.llm_backend == "auto":
+        return  # nothing configured: the offline path
     raise RuntimeError(
         "Gemini mode requires GEMINI_API_KEY or GOOGLE_CLOUD_PROJECT "
         "to be configured."

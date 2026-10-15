@@ -82,6 +82,7 @@ def evaluate(inp: RuleInput) -> list[Flag]:
     flags += _injection(inp)
     flags += _guaranteed_visa(inp)
     flags += _low_confidence(inp)
+    flags += _unread(inp)
     # Stable order: most severe first, then by code.
     flags.sort(key=lambda f: (-SEVERITY_ORDER[f.severity], f.code))
     return flags
@@ -523,7 +524,25 @@ def _low_confidence(inp: RuleInput) -> list[Flag]:
             evidence=[_ev(d, "confidence", f"{d.confidence:.2f}")],
         )
         for d in inp.documents
-        if d.confidence < 0.5
+        if d.confidence < 0.5 and not d.unread
+    ]
+
+
+def _unread(inp: RuleInput) -> list[Flag]:
+    return [
+        Flag(
+            code="READER_UNAVAILABLE",
+            # Nothing on the paper was checked, so the stamp cannot be green.
+            severity="medium",
+            title="This paper could not be read just now",
+            explanation=(
+                "The AI reader was not available, so nothing written on this paper was checked. This result "
+                "uses only what you typed. Try again later, or type what the paper says."
+            ),
+            evidence=[_ev(d, "unread", True)],
+        )
+        for d in inp.documents
+        if d.unread
     ]
 
 

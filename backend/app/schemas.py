@@ -126,6 +126,8 @@ class ExtractedDocument(BaseModel):
     instructions_to_ai: list[str] = Field(default_factory=list)
     confidence: float = Field(default=0.5, ge=0, le=1)
     injection_suspected: bool = False
+    # True when no reader could read the paper (the AI was unavailable or failed): nothing on it was checked.
+    unread: bool = False
     layout_hash: str | None = None  # perceptual hash of the page image, for template matching
 
 

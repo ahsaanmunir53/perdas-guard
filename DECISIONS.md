@@ -439,6 +439,16 @@ left room. Newest phase last. If a decision turns out wrong, change it here firs
      local work only. The default Pro model has no free tier, so the sandbox sets
      `MODEL_PRO=gemini-3.8-flash`.
 
+107. **`LLM_BACKEND=auto` lets the API switch between Gemini and the offline path by itself.** With a
+     key it tries Gemini; a quota, network or key failure sends that call to the offline path and
+     skips Gemini for `AI_COOLDOWN_SECONDS` (60), so nobody waits on retries. The offline path invents
+     nothing: a paper is marked unread and gets `READER_UNAVAILABLE` (medium, so never green), the
+     rules use what the person typed, and explanations and letters come from templates. The test
+     reader (`fake`) is not used as a fallback, because it parses fixture text and would pass a real
+     paper it never read. The assistant answers 503 with a reason instead of a server error.
+108. **`backend/.env.example` is split by where the API runs**: what $0 needs, the optional local
+     Spanner emulator, and the production design's paid services, which stay empty at $0.
+
 ## Not tested, and why
 
 The build environment cannot reach any Google host, so none of this has run:

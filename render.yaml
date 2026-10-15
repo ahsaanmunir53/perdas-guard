@@ -19,8 +19,10 @@ services:
         value: dev
       - key: AUTH_MODE
         value: demo
+      # Gemini while it answers; out of free quota or unreachable, the offline path (papers marked
+      # unread, rules on what was typed) until it answers again.
       - key: LLM_BACKEND
-        value: gemini
+        value: auto
       # A Google AI Studio key from a project without billing, so it stays on the free tier.
       - key: GEMINI_API_KEY
         sync: false
