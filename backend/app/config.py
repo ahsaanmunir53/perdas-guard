@@ -45,7 +45,10 @@ class Settings(BaseSettings):
     spanner_emulator_host: str = ""
 
     # --- Security ---
-    auth_mode: Literal["dev", "firebase"] = "dev"
+    # dev: X-Dev-User and X-Dev-Role headers, for local work only (the client picks its own role).
+    # demo: a public sandbox; every caller is a worker (X-Dev-User may name one), never staff.
+    # firebase: Firebase ID tokens, roles from the token's custom claim.
+    auth_mode: Literal["dev", "demo", "firebase"] = "dev"
     # Secret used to hash phone/account numbers for the integrity network and to sign evidence locally.
     # In production this comes from Secret Manager, never from code.
     hash_salt: str = "dev-only-salt-change-me"

@@ -186,3 +186,25 @@ def test_assistant_unavailable_without_gemini(client):
 def test_security_headers(client):
     r = client.get("/healthz")
     assert r.headers["X-Content-Type-Options"] == "nosniff" and r.headers["Cache-Control"] == "no-store"
+
+
+def test_demo_mode_never_takes_a_role_from_the_client(settings):
+    from fastapi.testclient import TestClient
+
+    from app.config import get_settings
+    from app.container import build_container
+    from app.main import create_app
+
+    demo = settings.model_copy(update={"auth_mode": "demo"})
+    app = create_app(demo, container=build_container(demo))
+    app.dependency_overrides[get_settings] = lambda: demo  # the sign-in check reads the app-wide settings
+    with TestClient(app) as client:
+        as_admin = {"X-Dev-User": "visitor1", "X-Dev-Role": "admin"}
+        assert client.get("/api/ngo/queue", headers=as_admin).status_code == 403
+        assert client.get("/api/ngo/network/rings", headers={"X-Dev-Role": "ngo"}).status_code == 403
+        # Worker routes still work, and a visitor reads back only their own check.
+        r = client.post("/api/checks", headers=as_admin, data={"destination_country": "SA", "recruiter_name": "Sunrise Manpower Promoters"})
+        assert r.status_code == 200, r.text
+        check = r.json()["check_id"]
+        assert client.get(f"/api/checks/{check}", headers={"X-Dev-User": "visitor1"}).status_code == 200
+        assert client.get(f"/api/checks/{check}", headers={"X-Dev-User": "visitor2"}).status_code == 404

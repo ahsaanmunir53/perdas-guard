@@ -214,6 +214,27 @@ real test of each:
 When something fails, note the screen, what you tapped, and any red message in the browser's console
 (desktop Chrome: right-click > Inspect > Console).
 
+## The backend as a free sandbox (optional)
+
+The live app above needs nothing else. The production design's API (`backend/`) can also run, at $0,
+as a sandbox on Render's free plan, so judges can try it in the browser at `/api/docs`. The blueprint
+is `render.yaml` in the repository root.
+
+1. Get a Gemini API key from Google AI Studio, in a project with no billing, so it stays on the free
+   tier. Never put it in a file in the repository.
+2. On render.com: New > Blueprint > connect this GitHub repository. Render reads `render.yaml` and
+   asks for `GEMINI_API_KEY`: paste the key there. Then Apply.
+3. When the build is done, open `https://<service name>.onrender.com/api/docs`. `/api/meta` shows
+   `"llm": "gemini"` and `"graph": "memory"`.
+
+What to tell judges about it: everything is kept in memory and starts empty after a restart; after 15
+minutes without visitors the service sleeps and the next request takes about a minute; every visitor
+is a worker (`AUTH_MODE=demo`), so the staff routes answer 403. Use the made-up samples only, never a
+real person's document: the free Gemini tier may use what it is sent to improve Google's products.
+
+Spanner Graph is not used there: at $0 it runs only on the local emulator. See
+[`infra/spanner/README.md`](infra/spanner/README.md).
+
 ## What is left, and where it goes
 
 The app works with what it has. These items need people, accounts or official pages that the build

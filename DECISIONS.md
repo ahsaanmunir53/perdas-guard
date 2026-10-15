@@ -429,6 +429,16 @@ left room. Newest phase last. If a decision turns out wrong, change it here firs
      Spanner Graph included, billing still has to be linked). A billed Enterprise instance needs
      `SPANNER_PAID=1`.
 
+105. **At $0 Spanner runs only on the emulator.** Every real Spanner instance, the free trial one
+     included, needs billing linked, and the project has none. The live app's integrity network
+     (rings, alerts, warnings) already runs on Firestore in the browser, so nothing a judge uses
+     depends on Spanner.
+106. **The backend can run as a free sandbox on Render** (`render.yaml`): memory store and graph, the
+     free Gemini tier, and a new `AUTH_MODE=demo` in which every caller is a worker. The brief's rule
+     is that a role never comes from the client; `dev` mode takes it from a header, so it stays for
+     local work only. The default Pro model has no free tier, so the sandbox sets
+     `MODEL_PRO=gemini-3.8-flash`.
+
 ## Not tested, and why
 
 The build environment cannot reach any Google host, so none of this has run:
@@ -448,6 +458,8 @@ The build environment cannot reach any Google host, so none of this has run:
   message; the success path has only run against stand-in transports in the unit tests.
 - Hindi, Bengali and Nepali dates in the test browser: its Chromium shows "Oct" for Nepali, which a
   phone's full language data should not.
+- Render: the blueprint and the Docker image were not built here (no access to Render or the Docker
+  registry from this environment).
 - Spanner: the graph tests and `spanner_setup` were run here only on the in-memory graph and with the
   emulator address pointing nowhere (the emulator download is blocked in this environment). The team
   reports that the Spanner store passed against the emulator on their machine before this change; no

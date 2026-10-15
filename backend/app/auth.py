@@ -3,6 +3,8 @@
 Production: Firebase Authentication ID tokens (phone OTP for workers and families, email or SSO for
 NGO staff and admins). Roles come from a custom claim `role` set by an admin script.
 Dev: the X-Dev-User and X-Dev-Role headers, accepted only when AUTH_MODE=dev.
+Demo (a public sandbox, such as a free host): every caller is a worker. X-Dev-User may name one, so
+a person can read back their own checks; X-Dev-Role is ignored, so nobody reaches the staff routes.
 """
 
 from __future__ import annotations
@@ -55,11 +57,12 @@ async def current_user(
     x_dev_role: str | None = Header(default=None),
     settings: Settings = Depends(get_settings),
 ) -> User:
-    if settings.auth_mode == "dev":
+    if settings.auth_mode in ("dev", "demo"):
         uid = x_dev_user or "demo-worker"
         if not _DEV_ID.match(uid):
             raise HTTPException(status.HTTP_400_BAD_REQUEST, "Bad dev user id")
-        role = x_dev_role if x_dev_role in _ROLES else "worker"
+        # A role is never taken from the client outside local development.
+        role = x_dev_role if settings.auth_mode == "dev" and x_dev_role in _ROLES else "worker"
         return User(id=uid, role=role)  # type: ignore[arg-type]
     if not authorization or not authorization.lower().startswith("bearer "):
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Sign in required")
