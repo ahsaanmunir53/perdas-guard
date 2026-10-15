@@ -14,7 +14,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app.config import Settings, export_genai_env, get_settings
-from app.container import Container, build_container
+from app.container import Container, build_container, graph_target
 from app.routers import assistant, cases, checks, destinations, recruiters, staff
 
 
@@ -120,6 +120,7 @@ def create_app(settings: Settings | None = None, container: Container | None = N
         c: Container = request.app.state.container
         return {
             "llm": c.llm.name,
+            "graph": graph_target(c.settings),
             "assistant": request.app.state.guardian is not None,
             "recruiter_list": {"source": c.recruiters.source, "count": c.recruiters.count()},
             "countries": [{"code": p.code, "name": p.name, "kind": p.kind, "status": p.status} for p in c.packs.all()],

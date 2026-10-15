@@ -50,11 +50,39 @@ def _llm(settings: Settings) -> LLM:
     return FakeLLM()
 
 
+def graph_target(settings: Settings) -> str:
+    """Where the integrity graph lives: "memory", "spanner-emulator" or "spanner"."""
+    import os
+
+    if settings.graph_backend != "spanner":
+        return "memory"
+    return "spanner-emulator" if (settings.spanner_emulator_host or os.environ.get("SPANNER_EMULATOR_HOST")) else "spanner"
+
+
 def _graph(settings: Settings, hasher: Hasher) -> GraphStore:
     if settings.graph_backend == "spanner":
+        import os
+
         from app.services.network_spanner import SpannerGraphStore
 
-        return SpannerGraphStore(settings.google_cloud_project, settings.spanner_instance, settings.spanner_database, hasher)
+        if settings.spanner_emulator_host:
+            # The client library reads the emulator address from the real environment only, and
+            # pydantic-settings does not copy .env values there. A value set in the shell wins.
+            os.environ.setdefault("SPANNER_EMULATOR_HOST", settings.spanner_emulator_host)
+        project = settings.spanner_target_project
+        if not (project and settings.spanner_instance and settings.spanner_database):
+            raise RuntimeError(
+                "GRAPH_BACKEND=spanner needs SPANNER_PROJECT (or GOOGLE_CLOUD_PROJECT), SPANNER_INSTANCE and SPANNER_DATABASE"
+            )
+        where = f"emulator at {os.environ['SPANNER_EMULATOR_HOST']}" if os.environ.get("SPANNER_EMULATOR_HOST") else "Cloud Spanner"
+        log.info(
+            "Integrity graph: Spanner (%s), projects/%s/instances/%s/databases/%s",
+            where,
+            project,
+            settings.spanner_instance,
+            settings.spanner_database,
+        )
+        return SpannerGraphStore(project, settings.spanner_instance, settings.spanner_database, hasher)
     return MemoryGraphStore(hasher)
 
 

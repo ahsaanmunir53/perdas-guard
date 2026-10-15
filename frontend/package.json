@@ -3,7 +3,9 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
+    "predev": "node scripts/check-stale.mjs",
     "dev": "next dev -p 3000",
+    "prebuild": "node scripts/check-stale.mjs",
     "build": "next build",
     "postbuild": "node scripts/build-sw.mjs",
     "preview": "node scripts/serve-out.mjs",

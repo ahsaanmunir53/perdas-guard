@@ -99,6 +99,10 @@ Choices worth knowing (all of them, with reasons, are in [`DECISIONS.md`](DECISI
 
 You need Node 22 (`node -v` should print `v22...`). Nothing else is needed to try the app.
 
+Unzip a new version into an empty folder, never over an older copy: files the new version no longer
+has would stay behind and break the build. `npm run dev` and `npm run build` check for them first and
+name them; `node scripts/check-stale.mjs --fix` (in `frontend/`) deletes them.
+
 ```bash
 cd frontend
 npm ci                 # installs exactly the versions in package-lock.json
@@ -227,7 +231,8 @@ environment did not have. The owner column follows the team table below.
 | 8 | The Firestore rules tests | A computer with Java (JDK 11 or newer) | `cd frontend && npm run test:rules` | Ahsaan |
 | 9 | A real phone test | A cheap Android phone | The checklist in step 8 | Muneeb |
 | 10 | Deck and demo video | | Outside this repository; use the wording in [How it is built](#how-it-is-built-0) | Muneeb |
-| 11 | App Check (optional) | Firebase console > App Check | Confirm it stays free before turning it on; the code does not use it yet | Ahsaan |
+| 11 | Spanner Graph for the backend (optional; the live demo does not use it) | Local emulator: no billing. Real instance: a free trial instance in its own project with billing linked | [`infra/spanner/README.md`](infra/spanner/README.md) | Ahsaan |
+| 12 | App Check (optional) | Firebase console > App Check | Confirm it stays free before turning it on; the code does not use it yet | Ahsaan |
 
 Not built, because no pack has an official source for them: the visa form guide and official register
 links for admission letters (see `DECISIONS.md`, entry 95).

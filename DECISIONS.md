@@ -408,6 +408,27 @@ left room. Newest phase last. If a decision turns out wrong, change it here firs
 100. **Browser tests wait until the page is live** (`data-ready` on `<html>`, set once React has
      hydrated). A file or a choice made before that was lost, in the tests and on a slow phone alike.
 
+### Spanner Graph (15 October 2026)
+
+101. **Spanner gets its own settings: `SPANNER_PROJECT` and `SPANNER_EMULATOR_HOST`.** The project
+     defaults to `GOOGLE_CLOUD_PROJECT`; set apart, Spanner can live in a billed project of its own
+     while the Firebase project stays on the no-cost plan. The emulator address is copied into the
+     real environment on start, because the Spanner client reads it only from there and
+     pydantic-settings does not export `.env`. The backend refuses to start in production with an
+     emulator address set. `/api/meta` says which graph is in use: memory, spanner-emulator or spanner.
+102. **One script applies the schema, to the emulator or a real instance**
+     (`python -m app.scripts.spanner_setup`): it splits `schema.sql` into its 14 statements and skips
+     what the database already has. On the emulator it also creates the instance; it never creates a
+     real one, and runs against real Spanner only with `--real`.
+103. **The graph tests run through the API on every backend**: two checks that share a phone and their
+     fraud cases make one ring in the NGO console, the agent check sees the risk, the GQL query on
+     `IntegrityGraph` agrees, and hidden instructions are flagged. On memory they always run; on
+     Spanner when `GRAPH_BACKEND=spanner` is set (real Spanner also needs `PG_SPANNER_REAL=1`). Each run
+     uses its own made-up names and deletes its rows.
+104. **`infra/setup.sh` creates the Spanner free trial instance by default** (no charge for 90 days,
+     Spanner Graph included, billing still has to be linked). A billed Enterprise instance needs
+     `SPANNER_PAID=1`.
+
 ## Not tested, and why
 
 The build environment cannot reach any Google host, so none of this has run:
@@ -427,6 +448,10 @@ The build environment cannot reach any Google host, so none of this has run:
   message; the success path has only run against stand-in transports in the unit tests.
 - Hindi, Bengali and Nepali dates in the test browser: its Chromium shows "Oct" for Nepali, which a
   phone's full language data should not.
+- Spanner: the graph tests and `spanner_setup` were run here only on the in-memory graph and with the
+  emulator address pointing nowhere (the emulator download is blocked in this environment). The team
+  reports that the Spanner store passed against the emulator on their machine before this change; no
+  real Spanner instance exists yet (the project has no billing).
 - Phase 4: the offline kit on a real phone and on Firebase Hosting (it was tested only on the local
   preview server, in desktop Chromium at phone size), a signed-in person's data offline, the staff
   screens with a real `roles/{uid}` document, and the new admin-only rule for the licensed list

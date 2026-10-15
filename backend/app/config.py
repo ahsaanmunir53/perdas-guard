@@ -22,7 +22,6 @@ class Settings(BaseSettings):
     google_cloud_location: str = "global"  # Gemini endpoint location
     gcs_bucket: str = ""  # uploads bucket; empty = keep uploads in memory (dev only)
 
-   
     # --- AI ---
     # "gemini" uses real Gemini API calls; "fake" uses simulated offline responses.
     gemini_api_key: str = ""
@@ -32,13 +31,18 @@ class Settings(BaseSettings):
     model_tts: str = "gemini-3.8-flash-lite-tts"
     tts_voice: str = "Kore"
 
-
-
     # --- Storage ---
     store_backend: Literal["memory", "firestore"] = "memory"
     graph_backend: Literal["memory", "spanner"] = "memory"
+    # The project that holds the Spanner instance. Empty = GOOGLE_CLOUD_PROJECT. Set it when Spanner
+    # lives in its own project (for example one with billing for a free trial instance, while the
+    # Firebase project stays on the no-cost plan), or to the project id used in the local emulator.
+    spanner_project: str = ""
     spanner_instance: str = ""
     spanner_database: str = ""
+    # host:port of the local Spanner emulator (127.0.0.1:9010). Empty = real Cloud Spanner. The
+    # Spanner client reads this only from the real environment, so it is copied there on start.
+    spanner_emulator_host: str = ""
 
     # --- Security ---
     auth_mode: Literal["dev", "firebase"] = "dev"
@@ -80,7 +84,18 @@ class Settings(BaseSettings):
             problems.append("STORE_BACKEND must be 'firestore' in prod")
         if not self.google_cloud_project:
             problems.append("GOOGLE_CLOUD_PROJECT is required in prod")
+        if self.graph_backend == "spanner":
+            import os
+
+            if self.spanner_emulator_host or os.environ.get("SPANNER_EMULATOR_HOST"):
+                problems.append("SPANNER_EMULATOR_HOST must not be set in prod")
+            if not (self.spanner_instance and self.spanner_database):
+                problems.append("SPANNER_INSTANCE and SPANNER_DATABASE are required when GRAPH_BACKEND=spanner")
         return problems
+
+    @property
+    def spanner_target_project(self) -> str:
+        return self.spanner_project or self.google_cloud_project
 
 
 @lru_cache

@@ -3,6 +3,7 @@
 #
 #   PROJECT_ID=my-project ./infra/setup.sh
 #   PROJECT_ID=my-project WITH_SPANNER=1 ./infra/setup.sh     # also create the Spanner Graph database
+#                                                             (free trial instance; SPANNER_PAID=1 for a billed one)
 #
 # Safe to re-run: resources that already exist are left as they are.
 # Two steps stay manual (console): enable the Phone sign-in provider in Firebase Authentication, and
@@ -76,12 +77,23 @@ done
 if [[ "${WITH_SPANNER:-0}" == "1" ]]; then
   echo "== Spanner Graph (integrity network)"
   gcloud services enable spanner.googleapis.com
-  exists gcloud spanner instances describe pardes ||
-    # Spanner Graph needs the Enterprise (or Enterprise Plus) edition.
-    gcloud spanner instances create pardes --config="regional-${REGION}" --processing-units=100 \
-      --edition=ENTERPRISE --description="Pardes Guard integrity network"
-  exists gcloud spanner databases describe integrity --instance=pardes ||
-    gcloud spanner databases create integrity --instance=pardes --ddl-file="$(dirname "$0")/spanner/schema.sql"
+  if ! exists gcloud spanner instances describe pardes; then
+    if [[ "${SPANNER_PAID:-0}" == "1" ]]; then
+      # Billed by the hour from the moment it exists. Spanner Graph needs Enterprise or Enterprise Plus.
+      gcloud spanner instances create pardes --config="regional-${REGION}" --processing-units=100 \
+        --edition=ENTERPRISE --description="Pardes Guard integrity network"
+    else
+      # Default: the 90-day free trial instance. No charge, Spanner Graph included, but the project
+      # still needs billing linked. One per project. See infra/spanner/README.md.
+      gcloud spanner instances create pardes --instance-type=free-instance --config="regional-${REGION}" \
+        --description="Pardes Guard trial"
+    fi
+  fi
+  if ! exists gcloud spanner databases describe integrity --instance=pardes; then
+    # Comment lines are dropped first; gcloud splits the rest on semicolons.
+    sed '/^[[:space:]]*--/d' "$(dirname "$0")/spanner/schema.sql" > /tmp/pardes-schema.sql
+    gcloud spanner databases create integrity --instance=pardes --ddl-file=/tmp/pardes-schema.sql
+  fi
   gcloud spanner databases add-iam-policy-binding integrity --instance=pardes \
     --member="serviceAccount:${API_SA}" --role=roles/spanner.databaseUser >/dev/null
 fi
