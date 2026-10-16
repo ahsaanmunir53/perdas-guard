@@ -123,6 +123,7 @@ def create_app(settings: Settings | None = None, container: Container | None = N
             # False while Gemini is skipped after a quota or network failure (LLM_BACKEND=auto).
             "llm_online": getattr(c.llm, "online", c.llm.name != "fake"),
             "graph": graph_target(c.settings),
+            "store": c.settings.store_backend,
             "assistant": request.app.state.guardian is not None,
             "recruiter_list": {"source": c.recruiters.source, "count": c.recruiters.count()},
             "countries": [{"code": p.code, "name": p.name, "kind": p.kind, "status": p.status} for p in c.packs.all()],

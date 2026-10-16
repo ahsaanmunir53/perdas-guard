@@ -13,7 +13,9 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
     # --- Runtime ---
-    env: Literal["dev", "test", "prod"] = "dev"
+    # dev: your computer. test: the test suite. demo: a public sandbox that uses the real services
+    # but signs nobody in (AUTH_MODE=demo), with the API docs at /api/docs. prod: production.
+    env: Literal["dev", "test", "demo", "prod"] = "dev"
     log_level: str = "INFO"
     cors_origins: list[str] = Field(default_factory=lambda: ["http://localhost:3000"])
 
@@ -38,6 +40,9 @@ class Settings(BaseSettings):
 
     # --- Storage ---
     store_backend: Literal["memory", "firestore"] = "memory"
+    # The Firestore database the API writes to. The web app uses "(default)" for its own documents
+    # (checks, cases, evidence with a different shape), so a deployed API gets a database of its own.
+    firestore_database: str = "(default)"
     graph_backend: Literal["memory", "spanner"] = "memory"
     # The project that holds the Spanner instance. Empty = GOOGLE_CLOUD_PROJECT. Set it when Spanner
     # lives in its own project (for example one with billing for a free trial instance, while the
@@ -108,6 +113,19 @@ class Settings(BaseSettings):
                 problems.append("SPANNER_EMULATOR_HOST must not be set in prod")
             if not (self.spanner_instance and self.spanner_database):
                 problems.append("SPANNER_INSTANCE and SPANNER_DATABASE are required when GRAPH_BACKEND=spanner")
+        return problems
+
+    def validate_for_demo(self) -> list[str]:
+        """Problems that must be fixed before a public sandbox (ENV=demo) serves anyone."""
+        import os
+
+        problems: list[str] = []
+        if self.auth_mode == "dev":
+            problems.append("AUTH_MODE must be 'demo' or 'firebase' on a public host: 'dev' lets the caller pick a role")
+        if self.hash_salt.startswith("dev-only") or self.evidence_signing_key.startswith("dev-only"):
+            problems.append("HASH_SALT and EVIDENCE_SIGNING_KEY must be real secrets on a public host")
+        if self.graph_backend == "spanner" and (self.spanner_emulator_host or os.environ.get("SPANNER_EMULATOR_HOST")):
+            problems.append("SPANNER_EMULATOR_HOST must not be set on a public host")
         return problems
 
     @property

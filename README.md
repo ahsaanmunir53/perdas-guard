@@ -262,6 +262,17 @@ real person's document: the free Gemini tier may use what it is sent to improve 
 Spanner Graph is not used there: at $0 it runs only on the local emulator. See
 [`infra/spanner/README.md`](infra/spanner/README.md).
 
+## The production API on Cloud Run (optional, uses billing)
+
+With billing on the project, the backend runs on Cloud Run with the real services it was written for:
+Gemini on Gemini Enterprise Agent Platform, Firestore, a Spanner Graph free trial instance, Cloud KMS,
+Sensitive Data Protection, Model Armor, Secret Manager and Cloud Scheduler. Everything is done from
+Cloud Shell with two scripts, then checked end to end with `backend/app/scripts/live_check.py`, which
+writes `backend/LIVE_CHECK.md`. Steps, costs and how to take it down: [`infra/CLOUD_RUN.md`](infra/CLOUD_RUN.md).
+
+Until `backend/LIVE_CHECK.md` exists and passes, say nothing more in the deck than the sentence in
+[How it is built](#how-it-is-built-0).
+
 ## What is left, and where it goes
 
 The app works with what it has. These items need people, accounts or official pages that the build
@@ -279,7 +290,7 @@ environment did not have. The owner column follows the team table below.
 | 8 | The Firestore rules tests | A computer with Java (JDK 11 or newer) | `cd frontend && npm run test:rules` | Ahsaan |
 | 9 | A real phone test | A cheap Android phone | The checklist in step 8 | Muneeb |
 | 10 | Deck and demo video | | Outside this repository; use the wording in [How it is built](#how-it-is-built-0) | Muneeb |
-| 11 | Spanner Graph for the backend (optional; the live demo does not use it) | Local emulator: no billing. Real instance: a free trial instance in its own project with billing linked | [`infra/spanner/README.md`](infra/spanner/README.md) | Ahsaan |
+| 11 | The production API with real Google services (optional; the live app does not use it) | Cloud Shell in `pardes-ea3e1`, which now has billing | [`infra/CLOUD_RUN.md`](infra/CLOUD_RUN.md); the result in `backend/LIVE_CHECK.md` | Ahsaan |
 | 12 | App Check (optional) | Firebase console > App Check | Confirm it stays free before turning it on; the code does not use it yet | Ahsaan |
 
 Not built, because no pack has an official source for them: the visa form guide and official register

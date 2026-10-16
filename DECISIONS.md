@@ -449,6 +449,25 @@ left room. Newest phase last. If a decision turns out wrong, change it here firs
 108. **`backend/.env.example` is split by where the API runs**: what $0 needs, the optional local
      Spanner emulator, and the production design's paid services, which stay empty at $0.
 
+### Production API on Cloud Run (16 October 2026)
+
+109. **The team linked billing to `pardes-ea3e1`, so the backend can run on Cloud Run in the same
+     project** as the web app. One project means the service account reaches Firestore, Spanner, KMS
+     and Agent Platform without keys. The web app is unchanged and still does not call the API.
+110. **The deployed API runs as a sandbox by default (`ENV=demo`, `AUTH_MODE=demo`)**: real services,
+     the API docs at `/api/docs`, nobody signed in, every caller a worker, staff routes closed. The
+     backend refuses to start a sandbox with dev sign-in, dev secrets or an emulator address.
+     `MODE=prod` deploys with Firebase sign-in and no docs.
+111. **The API writes to its own Firestore database (`pardes-api`).** The web app's `(default)`
+     database uses the same collection names (`checks`, `cases`, `evidence`) for documents of another
+     shape, and the API's service account bypasses the rules.
+112. **What is claimed follows `backend/LIVE_CHECK.md`.** `live_check.py` (standard library only) runs
+     made-up papers through the deployed API and records, service by service, what it saw. The README
+     and the deck name a service as running only after its line passed.
+113. **Cost guards:** the Spanner free trial instance, at most 3 Cloud Run instances, Model Armor
+     within its free 2 million tokens a month, a 20 USD budget alert, and the teardown commands in
+     `infra/CLOUD_RUN.md`.
+
 ## Not tested, and why
 
 The build environment cannot reach any Google host, so none of this has run:
@@ -468,6 +487,8 @@ The build environment cannot reach any Google host, so none of this has run:
   message; the success path has only run against stand-in transports in the unit tests.
 - Hindi, Bengali and Nepali dates in the test browser: its Chromium shows "Oct" for Nepali, which a
   phone's full language data should not.
+- Cloud Run: `infra/setup.sh`, `infra/deploy.sh` and the API image have not run here (no Google access
+  from this environment); `live_check.py` was run only against a local sandbox-mode server.
 - Render: the blueprint and the Docker image were not built here (no access to Render or the Docker
   registry from this environment).
 - Spanner: the graph tests and `spanner_setup` were run here only on the in-memory graph and with the

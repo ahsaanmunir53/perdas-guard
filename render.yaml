@@ -15,8 +15,9 @@ services:
     healthCheckPath: /healthz
     autoDeployTrigger: commit
     envVars:
+      # A public sandbox: the API docs at /api/docs, nobody signed in, staff routes closed.
       - key: ENV
-        value: dev
+        value: demo
       - key: AUTH_MODE
         value: demo
       # Gemini while it answers; out of free quota or unreachable, the offline path (papers marked

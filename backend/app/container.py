@@ -100,8 +100,16 @@ def build_container(settings: Settings, dispatcher: Dispatcher | None = None) ->
         problems = settings.validate_for_prod()
         if problems:
             raise RuntimeError("Refusing to start in prod: " + "; ".join(problems))
+    if settings.env == "demo":
+        problems = settings.validate_for_demo()
+        if problems:
+            raise RuntimeError("Refusing to start the public sandbox: " + "; ".join(problems))
 
-    store: DocStore = FirestoreStore(settings.google_cloud_project) if settings.store_backend == "firestore" else MemoryStore()
+    store: DocStore = (
+        FirestoreStore(settings.google_cloud_project, settings.firestore_database)
+        if settings.store_backend == "firestore"
+        else MemoryStore()
+    )
     blobs: BlobStore = GcsBlobStore(settings.gcs_bucket) if settings.gcs_bucket else MemoryBlobStore()
     packs = PackRegistry(Path(settings.packs_dir) if settings.packs_dir else None)
 
