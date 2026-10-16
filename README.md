@@ -123,11 +123,11 @@ npm run preview        # open http://localhost:4173
 
 Three places hold settings. Only the first is needed for the live app.
 
-| File | Needed for | What goes in it |
+| Where | Needed for | What goes in it |
 |---|---|---|
 | `frontend/.env.local` | The live app (Firebase) | The four Firebase web app values (step 4 below). Copy it from `frontend/.env.example`. |
-| `backend/.env` | The API on your computer | At $0 only `LLM_BACKEND=auto` and `GEMINI_API_KEY`; the rest can stay as in `backend/.env.example`, whose sections say which values are for the paid production design and stay empty. |
-| Render dashboard | The API sandbox on Render | `render.yaml` sets everything; only `GEMINI_API_KEY` is typed in. |
+| `backend/.env` | The API on your computer only | `LLM_BACKEND=auto` and a `GEMINI_API_KEY` from Google AI Studio; the rest can stay as in `backend/.env.example`. |
+| Cloud Run | The deployed API | Nothing to type. `infra/deploy.sh` sets every value; Gemini, Firestore, Spanner and KMS use the service account (no keys); the two secrets are made by `infra/setup.sh` in Secret Manager. |
 
 The AI switches by itself in both builds. The live app tries Gemini through Firebase AI Logic and,
 when it is out of quota, unreachable or not set up, says so and carries on with the rules and the
@@ -135,14 +135,15 @@ typed form. The API does the same with `LLM_BACKEND=auto`: a paper Gemini could 
 "could not be read just now", so its result is never green, and Gemini is tried again after
 `AI_COOLDOWN_SECONDS`. `LLM_BACKEND=fake` is only for the tests.
 
-What Firebase gives at $0 (Spark plan), and what this app uses: Hosting, Authentication (Google
-sign-in; guests need no account), Firestore and AI Logic. Not on Spark: Cloud Storage (so vault files
-stay on the phone), Cloud Functions (so case steps move when the app opens) and phone number (SMS)
-sign-in. Email and password sign-in is free on Spark too, but the app has no screen for it yet.
+What the live app uses from Firebase: Hosting, Authentication (Google sign-in; guests need no
+account), Firestore and AI Logic, all within the free quotas. It was built for the Spark plan, so it
+uses no Cloud Storage (vault files stay on the phone), no Cloud Functions (case steps move when the app
+opens) and no phone number (SMS) sign-in. The project is now on Blaze because billing is linked for
+the API on Cloud Run.
 
 ## Put it online
 
-Follow the steps in order. Nothing here costs money if the project stays on the free (Spark) plan.
+Follow the steps in order. The live app stays within Firebase's free quotas.
 
 **1. Tools on your computer.** Node 22, then the Firebase CLI, then sign in:
 
@@ -151,13 +152,9 @@ npm install -g firebase-tools
 firebase login
 ```
 
-**2. Keep the project on the free plan.** The team's Firebase project is `pardes-ea3e1`. If it has billing linked,
-unlink it (needs the gcloud CLI), then check that the Firebase console shows "Spark" at the bottom of
-the left menu:
-
-```bash
-gcloud billing projects unlink pardes-ea3e1
-```
+**2. Billing.** The team's Firebase project is `pardes-ea3e1`. It has billing linked for the API on
+Cloud Run, so the console shows "Blaze": keep it that way, and set the budget alert in
+[`infra/CLOUD_RUN.md`](infra/CLOUD_RUN.md) (step 2) before deploying anything.
 
 **3. Switch on the Firebase services** at https://console.firebase.google.com:
 
@@ -240,27 +237,6 @@ real test of each:
 
 When something fails, note the screen, what you tapped, and any red message in the browser's console
 (desktop Chrome: right-click > Inspect > Console).
-
-## The backend as a free sandbox (optional)
-
-The live app above needs nothing else. The production design's API (`backend/`) can also run, at $0,
-as a sandbox on Render's free plan, so judges can try it in the browser at `/api/docs`. The blueprint
-is `render.yaml` in the repository root.
-
-1. Get a Gemini API key from Google AI Studio, in a project with no billing, so it stays on the free
-   tier. Never put it in a file in the repository.
-2. On render.com: New > Blueprint > connect this GitHub repository. Render reads `render.yaml` and
-   asks for `GEMINI_API_KEY`: paste the key there. Then Apply.
-3. When the build is done, open `https://<service name>.onrender.com/api/docs`. `/api/meta` shows
-   `"llm": "gemini"` and `"graph": "memory"`.
-
-What to tell judges about it: everything is kept in memory and starts empty after a restart; after 15
-minutes without visitors the service sleeps and the next request takes about a minute; every visitor
-is a worker (`AUTH_MODE=demo`), so the staff routes answer 403. Use the made-up samples only, never a
-real person's document: the free Gemini tier may use what it is sent to improve Google's products.
-
-Spanner Graph is not used there: at $0 it runs only on the local emulator. See
-[`infra/spanner/README.md`](infra/spanner/README.md).
 
 ## The production API on Cloud Run (optional, uses billing)
 

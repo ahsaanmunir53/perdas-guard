@@ -10,8 +10,8 @@ not. The README's wording for judges stays true either way: the production desig
 the repository with unit tests and deployment scripts". Say Spanner ran live only after step B4 below
 has passed against a real instance.
 
-At $0, which is the plan for the hackathon, stop after part A: part B needs a billing account. The
-backend on Render's free plan uses the in-memory graph (`render.yaml`).
+Part A needs no billing. For the deployed API, `infra/setup.sh` creates the free trial instance of
+part B for you (see `infra/CLOUD_RUN.md`); the manual part B steps are for a project of your own.
 
 All commands are for PowerShell on Windows. Set this once per terminal:
 

@@ -468,6 +468,10 @@ left room. Newest phase last. If a decision turns out wrong, change it here firs
      within its free 2 million tokens a month, a 20 USD budget alert, and the teardown commands in
      `infra/CLOUD_RUN.md`.
 
+114. **The Render sandbox is dropped** (`render.yaml` removed). With billing on the project, the API
+     sandbox runs on Cloud Run with the real services instead (109-113), so judges see one backend,
+     on Google Cloud.
+
 ## Not tested, and why
 
 The build environment cannot reach any Google host, so none of this has run:
@@ -489,8 +493,6 @@ The build environment cannot reach any Google host, so none of this has run:
   phone's full language data should not.
 - Cloud Run: `infra/setup.sh`, `infra/deploy.sh` and the API image have not run here (no Google access
   from this environment); `live_check.py` was run only against a local sandbox-mode server.
-- Render: the blueprint and the Docker image were not built here (no access to Render or the Docker
-  registry from this environment).
 - Spanner: the graph tests and `spanner_setup` were run here only on the in-memory graph and with the
   emulator address pointing nowhere (the emulator download is blocked in this environment). The team
   reports that the Spanner store passed against the emulator on their machine before this change; no
