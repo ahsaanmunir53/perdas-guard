@@ -1,8 +1,8 @@
 # Decisions
 
-Choices made while rebuilding Pardes Guard for the no-cost stack, with the reason for each. The build
-brief (`PROMPT_FOR_FABLE.md`) says what to build; this file records what was decided where the brief
-left room. Newest phase last. If a decision turns out wrong, change it here first, then in the code.
+Choices made while rebuilding Pardes Guard for the no-cost stack, with the reason for each. The team's
+build brief said what to build (it is in the git history; see entry 115); this file records what was
+decided where the brief left room. Newest phase last. If a decision turns out wrong, change it here first, then in the code.
 
 ## Phase 1 (13 October 2026)
 
@@ -472,6 +472,20 @@ left room. Newest phase last. If a decision turns out wrong, change it here firs
      sandbox runs on Cloud Run with the real services instead (109-113), so judges see one backend,
      on Google Cloud.
 
+### The repository as submitted (16 October 2026)
+
+115. **The repository is set out for judges.** The README leads with the links, screenshots of the
+     built app (made-up data only, from `frontend/scripts/screenshots.mjs`), the problem, how Gemini
+     is used, the architecture and what has and has not been verified. The deploy steps moved to
+     `docs/DEPLOY.md`, and the content still to check to `docs/CONTENT.md`. The team chose the MIT
+     License. Removed from the tree, all still in the git history: the build brief
+     (`PROMPT_FOR_FABLE.md`, written for the $0 plan and out of date), the local Spanner emulator
+     scripts at the root and in `backend/` (replaced by `backend/app/scripts/spanner_setup.py` and
+     `backend/tests/test_graph_integration.py`), and three `.bak` copies of backend files.
+116. **GitHub Actions runs the fast tests on every push** (`.github/workflows/tests.yml`): the web
+     app's type check, unit tests and build, and the API's tests on Python 3.12, the Dockerfile's
+     version. No secrets are needed. The browser tests stay a manual step (about six minutes).
+
 ## Not tested, and why
 
 The build environment cannot reach any Google host, so none of this has run:
@@ -504,8 +518,8 @@ The build environment cannot reach any Google host, so none of this has run:
 
 ## Waiting on the team
 
-The same list, with where each item comes from and where it goes, is in the README under "What is
-left, and where it goes".
+The same list, with where each item comes from and where it goes, is in `docs/CONTENT.md` under
+"What is left, and where it goes".
 
 - Firebase console setup (brief section 13) and the four web config values.
 - Verified content for the two hero routes: every document guide field, fees with sources, Pakistan's
