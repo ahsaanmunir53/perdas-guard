@@ -33,7 +33,7 @@ test("a fictional fraudulent sample gets the red stamp with the right flags", as
   // Honest labels: sample, prepared reading, draft rules, not legal advice.
   await expect(page.getByText("Sample check. The paper, the people and the companies in it are fictional.")).toBeVisible();
   await expect(page.getByText("This sample comes with its reading prepared, so no AI was used.")).toBeVisible();
-  await expect(page.getByText("Some rules used here are drafts")).toBeVisible();
+  await expect(page.getByText("Some rules used here are prototype rules")).toBeVisible();
   await expect(page.getByText("This is information, not legal advice.")).toBeVisible();
   void found;
 });

@@ -9,7 +9,7 @@
 #   /api/docs, nobody signed in: every caller is a worker and the staff routes answer 403.
 # MODE=prod: Firebase ID tokens, staff roles from custom claims, no API docs.
 #
-# The web app is deployed on its own with the Firebase CLI (README.md, "Put it online"); it does not
+# The web app is deployed on its own with the Firebase CLI (docs/DEPLOY.md); it does not
 # call this API. Run in Cloud Shell. Step by step: infra/CLOUD_RUN.md.
 
 set -euo pipefail

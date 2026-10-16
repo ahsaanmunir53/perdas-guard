@@ -275,7 +275,7 @@ documents:
     steps: [] # TODO(source)
     bring: [] # TODO(source)
     typical_time: null # TODO(source)
-    official_url: null # TODO(source)
+    official_url: https://www.gov.uk/tb-test-visa # link only, from gov.uk (opened 2026-10-16); the content is still draft
     sources: []
     status: draft
     last_verified: null

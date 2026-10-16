@@ -74,7 +74,7 @@ test("the journey page shows every stage, stamps a finished one, and links each 
   // A step from the pack opens with who does it, its official link and its draft label.
   await page.getByRole("link", { name: /Medical examination/ }).click();
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Medical examination");
-  await expect(page.getByText("Draft. Our team has not checked this yet.")).toBeVisible();
+  await expect(page.getByText("Prototype. Confirm this on the official website.")).toBeVisible();
   const official = page.getByTestId("official");
   await expect(official).toHaveAttribute("href", "https://wafid.com");
   await expect(official).toHaveAttribute("rel", /noopener/);
@@ -167,7 +167,7 @@ test("a document guide is plain HTML before any script runs, and never fills a g
   await expect(page.getByText("Directorate General of Immigration and Passports")).toBeVisible();
   // Steps, what to bring, where and how long are not verified yet: the page says so.
   await expect(page.getByText("Not added yet")).toHaveCount(4);
-  await expect(page.getByText("Draft. Our team has not checked this yet.")).toBeVisible();
+  await expect(page.getByText("Prototype. Confirm this on the official website.")).toBeVisible();
 
   await page.goto("/ur/documents/pk/passport/");
   await expect(page.locator("html")).toHaveAttribute("dir", "rtl");

@@ -58,7 +58,7 @@ firebase deploy --only hosting
 On Windows, if `npm run data` cannot find `python3`, run `python frontend/scripts/export_data.py` from
 the repository root instead. Some tests check today's draft content (for example, the cost screen test
 expects Pakistan's legal maximum fee to say "not added yet", and the check test expects the "Some
-rules used here are drafts" line). When verified content changes a result, update the test's expected
+rules used here are prototype rules" line). When verified content changes a result, update the test's expected
 result to match the content, never the content to match the test.
 
 ## The licensed list

@@ -29,7 +29,7 @@ test("interview practice lists the route's own topics, marked as practice and dr
   const topics = page.getByTestId("interview-topics").locator("li");
   await expect(topics).toHaveCount(4);
   await expect(topics.first()).toHaveText("Why you chose this course and this university");
-  await expect(page.getByText("Draft. Our team has not checked this yet.")).toBeVisible();
+  await expect(page.getByText("Prototype. Confirm this on the official website.")).toBeVisible();
   await expect(page.locator('a[href="https://www.gov.uk/student-visa"]')).toBeVisible();
   await expect(page.getByText("Practice with an AI interviewer needs the AI reader", { exact: false })).toBeVisible();
   await expect(page.getByTestId("practice-voice")).toHaveCount(0);

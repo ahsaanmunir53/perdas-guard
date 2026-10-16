@@ -94,8 +94,11 @@ her practise the visa interview by voice.
 | Privacy | A plain page on what is kept and where, the AI answer language, sharing warnings (opt-in), and "Delete everything". |
 
 Country packs ship for Pakistan and the Philippines (origin) and Saudi Arabia, UAE, Qatar, Japan,
-South Korea, Canada, the UK and Australia (destination). **All of their content is marked draft** until
-the team checks it against the official page linked on each item.
+South Korea, Canada, the UK and Australia (destination). **This is a prototype: the app labels all of
+this content "Prototype"** and asks the person to confirm each item on the official website linked to it.
+Every Pakistani document guide links to its issuer's own site where there is one (passport: DGIP; CNIC
+and FRC: NADRA's Pak Identity; HEC, MOFA and IBCC attestation). The police certificate, which each
+province issues on its own, has no link yet.
 
 ## How Gemini is used
 

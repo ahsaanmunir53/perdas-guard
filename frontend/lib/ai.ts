@@ -145,6 +145,16 @@ function retryDelayMs(details: unknown): number | null {
   return null;
 }
 
+/**
+ * Leaves the real error in the browser console (F12 > Console), so a failure that the screen can only
+ * call "could not reach" can still be told apart: a wrong model id, a blocked API key, a quota.
+ */
+function logFailure(model: string, error: unknown): void {
+  if ((error as { name?: string } | null)?.name === "AbortError") return;
+  const e = (error ?? {}) as { code?: string; message?: string; customErrorData?: { status?: number } };
+  console.warn(`Pardes Guard: ${model} failed`, { code: e.code, status: e.customErrorData?.status, message: e.message });
+}
+
 /** Decide what a thrown error means. Shapes follow the Firebase AI SDK's AIError (code, customErrorData). */
 export function classifyError(error: unknown): Fault {
   const e = (error ?? {}) as { name?: string; code?: string; message?: string; customErrorData?: { status?: number; errorDetails?: unknown } };
@@ -256,6 +266,7 @@ export class GeminiProvider implements AIProvider {
         if (turn.parts.some((p) => ("text" in p && p.text.trim()) || "functionCall" in p)) return { ok: true, value: turn, model: model.id };
         sawUnreadable = true;
       } catch (error) {
+        logFailure(model.id, error);
         const fault = classifyError(error);
         if (fault.kind === "stop") return { ok: false, reason: fault.reason };
         if (fault.because === "quota") sawQuota = true;
@@ -290,6 +301,7 @@ export class GeminiProvider implements AIProvider {
         if (value !== null) return { ok: true, value, model: model.id };
         sawUnreadable = true; // an answer we cannot use: let the next model try
       } catch (error) {
+        logFailure(model.id, error);
         const fault = classifyError(error);
         if (fault.kind === "stop") return { ok: false, reason: fault.reason };
         if (fault.because === "quota") sawQuota = true;

@@ -485,6 +485,21 @@ decided where the brief left room. Newest phase last. If a decision turns out wr
 116. **GitHub Actions runs the fast tests on every push** (`.github/workflows/tests.yml`): the web
      app's type check, unit tests and build, and the API's tests on Python 3.12, the Dockerfile's
      version. No secrets are needed. The browser tests stay a manual step (about six minutes).
+117. **Draft content is labelled "Prototype", with the official site to confirm it on** (asked by the
+     team). The draft badge, the journey and cost notes, the document guides and the check's rule
+     note now say the information is a prototype, not yet confirmed with the official source, and
+     point to the official website. They do not say an authority is reviewing it: none has been asked.
+     The status in the packs stays `draft`.
+118. **Each Pakistani document guide links to its issuer's own site** (opened on 16 October 2026):
+     passport to dgip.gov.pk; CNIC and FRC to NADRA's Pak Identity portal (id.nadra.gov.pk, named for
+     both on mofa.gov.pk); HEC attestation to hec.gov.pk; MOFA attestation to apostille.mofa.gov.pk;
+     IBCC equivalence to ibcc.edu.pk; and the UK TB test to gov.uk. Their domains are added to
+     `official_domains`. Only the link is filled: steps, fees and times stay empty until someone reads
+     the official page. The police certificate has no link, because each province or district issues
+     it and no single official page was found.
+119. **The web app writes the real AI error to the browser console** ("Pardes Guard: <model> failed",
+     with the SDK's code, HTTP status and message), because the screen shows "could not reach" both
+     for a network failure and for every model refusing the request.
 
 ## Not tested, and why
 

@@ -27,14 +27,15 @@ official_sources:
     url: https://www.oec.gov.pk
 # A link is only accepted when its domain is on one of these lists (see app/packs/__init__.py).
 # Add a domain here only after checking it is the real official site.
-official_domains: [beoe.gov.pk, opf.org.pk, oec.gov.pk]
+official_domains: [beoe.gov.pk, opf.org.pk, oec.gov.pk, dgip.gov.pk, nadra.gov.pk, hec.gov.pk, mofa.gov.pk, ibcc.edu.pk]
 # Leave null until the current figure is copied from the official source. The rules engine then says
 # "verify the official fee" instead of guessing. TODO(source): the legal maximum a licensed promoter may charge.
 max_recruitment_fee: null
 max_recruitment_fee_source: null
 
 # One guide per paper: who issues it, where, what to bring, the steps, how long, the official link.
-# Only the title and the issuing body are filled in so far; everything else is TODO(source).
+# The title, the issuing body and (where there is one) the official link are filled in; the links were
+# opened on 2026-10-16 and point to the issuer's own site. Everything else is TODO(source).
 documents:
   - id: passport
     title: Passport
@@ -44,7 +45,7 @@ documents:
     steps: [] # TODO(source)
     bring: [] # TODO(source)
     typical_time: null # TODO(source)
-    official_url: null # TODO(source): add the official site's domain to official_domains first
+    official_url: https://dgip.gov.pk/eServices/online-passport.php # link only, from dgip.gov.pk, the Directorate General of Immigration & Passports' own site (opened 2026-10-16); the content is still draft
     sources: []
     status: draft
     last_verified: null
@@ -61,7 +62,7 @@ documents:
     steps: [] # TODO(source)
     bring: [] # TODO(source)
     typical_time: null # TODO(source)
-    official_url: null # TODO(source)
+    official_url: https://id.nadra.gov.pk/ # link only, from NADRA's Pak Identity portal, named for CNIC on mofa.gov.pk/services/dar-es-salam-nadra-services (opened 2026-10-16); the content is still draft
     sources: []
     status: draft
     last_verified: null
@@ -78,7 +79,7 @@ documents:
     steps: [] # TODO(source)
     bring: [] # TODO(source)
     typical_time: null # TODO(source)
-    official_url: null # TODO(source)
+    official_url: https://id.nadra.gov.pk/ # link only, from NADRA's Pak Identity portal, named for FRC on mofa.gov.pk/poc (opened 2026-10-16); the content is still draft
     sources: []
     status: draft
     last_verified: null
@@ -95,7 +96,7 @@ documents:
     steps: [] # TODO(source)
     bring: [] # TODO(source)
     typical_time: null # TODO(source)
-    official_url: null # TODO(source)
+    official_url: null # TODO(source): issued by the police of each province or district; no single official link
     sources: []
     status: draft
     last_verified: null
@@ -111,7 +112,7 @@ documents:
     steps: [] # TODO(source)
     bring: [] # TODO(source)
     typical_time: null # TODO(source)
-    official_url: null # TODO(source)
+    official_url: https://www.hec.gov.pk/english/services/students/DAS/Pages/Degree-Attestation.aspx # link only, from HEC's degree attestation page on hec.gov.pk (opened 2026-10-16); the content is still draft
     sources: []
     status: draft
     last_verified: null
@@ -128,7 +129,7 @@ documents:
     steps: [] # TODO(source)
     bring: [] # TODO(source)
     typical_time: null # TODO(source)
-    official_url: null # TODO(source)
+    official_url: https://apostille.mofa.gov.pk/ # link only, from the Ministry of Foreign Affairs' attestation and apostille portal on mofa.gov.pk (opened 2026-10-16); the content is still draft
     sources: []
     status: draft
     last_verified: null
@@ -145,7 +146,7 @@ documents:
     steps: [] # TODO(source)
     bring: [] # TODO(source)
     typical_time: null # TODO(source)
-    official_url: null # TODO(source)
+    official_url: https://ibcc.edu.pk/ # link only, from IBCC's own site, with its equivalence and attestation sections (opened 2026-10-16); the content is still draft
     sources: []
     status: draft
     last_verified: null

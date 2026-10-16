@@ -12,7 +12,7 @@ test("costs with no checked amount show no number, and comparing says what it ca
   await expect(page.getByLabel("Country you are going to")).toHaveValue("SA");
   await expect(page.getByText("None of these costs has a checked amount yet.")).toBeVisible();
   const lines = page.locator("section[aria-labelledby='cost-official'] li");
-  await expect(lines.filter({ hasText: "Medical examination" })).toContainText("Not checked yet");
+  await expect(lines.filter({ hasText: "Medical examination" })).toContainText("Not confirmed yet");
   // No amount anywhere in the list: a guessed fee could cost someone their savings.
   await expect(lines.filter({ hasText: /\d/ })).toHaveCount(0);
   // Pakistan's legal maximum is not in the pack, so the office to ask is named, with its site.
