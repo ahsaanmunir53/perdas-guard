@@ -23,7 +23,7 @@ const SCHEMA = { type: "object", properties: { employer_name: { type: "string", 
 const ask = { system: "Read the document.", parts: [{ text: "Offer letter text" }] };
 
 describe("model chain", () => {
-  it("never includes a model without a free tier", () => {
+  it("tries the two Gemini models, then Gemma", () => {
     expect(MODEL_CHAIN.map((m) => m.id)).toEqual(["gemini-3.8-flash", "gemini-3.5-flash-lite", "gemma-4-31b-it"]);
     expect(MODEL_CHAIN.some((m) => m.id.includes("pro"))).toBe(false);
   });

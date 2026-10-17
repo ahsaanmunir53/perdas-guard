@@ -115,8 +115,8 @@ eligibility, wage arithmetic and case timing come from deterministic, tested cod
 | Interview practice | Plays the interviewer by voice (Gemini Live) or text, then writes per-topic feedback | Builds the topics from the route's own data and labels everything as practice |
 | Readiness scan | Reads the name and expiry date from each paper | Counts the months left and compares the spelling across papers |
 
-The live app calls `gemini-3.8-flash`, falls back to `gemini-3.5-flash-lite` and then to Gemma
-(`gemma-4-31b-it`), and uses `gemini-3.1-flash-live-preview` for voice. When Gemini is unavailable or
+The live app reaches Gemini on Agent Platform through Firebase AI Logic. It calls `gemini-3.8-flash`,
+falls back to `gemini-3.5-flash-lite`, and uses `gemini-live-2.5-flash-native-audio` for voice. When Gemini is unavailable or
 out of quota, the app says so and keeps working with the rules, the typed form and template letters.
 A paper that could not be read never gets a green stamp.
 
@@ -145,7 +145,7 @@ flowchart TB
   subgraph firebase["Firebase"]
     direction LR
     hosting["Hosting"] ~~~ auth["Authentication<br/>Google sign-in"] ~~~ firestore["Cloud Firestore<br/>with security rules"]
-    ailogic["AI Logic<br/>Gemini Developer API"] ~~~ live["Gemini Live API"]
+    ailogic["AI Logic<br/>Gemini on Agent Platform"] ~~~ live["Gemini Live API"]
   end
   phone --> firebase
 ```
@@ -167,7 +167,7 @@ flowchart TB
   run --> gcp
 ```
 
-The live demo runs entirely on Firebase's no-cost plan, with Gemini through Firebase AI Logic. The production design, with ADK agents on Cloud Run, Cloud KMS-signed evidence, Sensitive Data Protection, Model Armor and a Spanner Graph fraud network, is implemented in the repository with unit tests and deployment scripts.
+The live app runs on Firebase (Hosting, Authentication and Firestore) with Gemini on Agent Platform through Firebase AI Logic. The production design, with ADK agents on Cloud Run, Cloud KMS-signed evidence, Sensitive Data Protection, Model Armor and a Spanner Graph fraud network, is implemented in the repository with unit tests and deployment scripts.
 
 The live app does not call the API. The API has not yet been run against live Google services:
 [`infra/CLOUD_RUN.md`](infra/CLOUD_RUN.md) deploys it, and `backend/LIVE_CHECK.md` will record the
@@ -180,9 +180,8 @@ end-to-end check, service by service.
 | Firebase Hosting | The static site and its security headers | Live app |
 | Firebase Authentication | Google sign-in (guests use the app without an account) | Live app |
 | Cloud Firestore | Journeys, checks, cases, evidence records, shares, reports, signals, published warnings, with rules that check ownership and staff roles | Live app |
-| Firebase AI Logic with the Gemini Developer API | Reading papers and voice notes (JSON schemas), explanations, translations, letters, the assistant (function calling), interview feedback | Live app |
-| Gemini Live API (preview) | Talking to the assistant and interview practice, with transcripts | Live app |
-| Gemma (`gemma-4-31b-it`) | Last model in the reading fallback chain | Live app |
+| Firebase AI Logic with the Agent Platform Gemini API | Reading papers and voice notes (JSON schemas), explanations, translations, letters, the assistant (function calling), interview feedback | Live app |
+| Gemini Live API (`gemini-live-2.5-flash-native-audio`) | Talking to the assistant and interview practice, with transcripts | Live app |
 | Google Calendar template links | Saving important dates, filled in, by the person | Live app |
 | Google Search and Maps links | Looking up an employer named on a paper (plain links) | Live app |
 | Google Fonts | Atkinson Hyperlegible Next and the Noto families for Urdu, Arabic, Devanagari, Bengali, Sinhala and Tamil, served from the site | Live app |

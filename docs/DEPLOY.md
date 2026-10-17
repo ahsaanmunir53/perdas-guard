@@ -26,14 +26,17 @@ typed form. The API does the same with `LLM_BACKEND=auto`: a paper Gemini could 
 `AI_COOLDOWN_SECONDS`. `LLM_BACKEND=fake` is only for the tests.
 
 What the live app uses from Firebase: Hosting, Authentication (Google sign-in; guests need no
-account), Firestore and AI Logic, all within the free quotas. It was built for the Spark plan, so it
+account), Firestore, and AI Logic with the Agent Platform Gemini API. Hosting, Authentication and
+Firestore stay within the free quotas; Gemini on Agent Platform is billed to the project's Cloud
+Billing account (the Gemini Developer API would need its own prepaid balance in AI Studio, see
+`DECISIONS.md`, entry 120). The app was built for the Spark plan, so it
 uses no Cloud Storage (vault files stay on the phone), no Cloud Functions (case steps move when the app
 opens) and no phone number (SMS) sign-in. The project is on Blaze because billing is linked for the
 API on Cloud Run.
 
 ## Put the live app online
 
-Follow the steps in order. The live app stays within Firebase's free quotas.
+Follow the steps in order.
 
 **1. Tools on your computer.** Node 22 (`node -v` should print `v22...`), then the Firebase CLI, then
 sign in:
@@ -53,7 +56,11 @@ Cloud Run, so the console shows "Blaze": keep it that way, and set the budget al
 - Authentication > Get started > Sign-in method > Google > Enable > choose a support email > Save.
 - Firestore Database > Create database > pick a location near the users (for example `asia-south1`,
   Mumbai; it cannot be changed later) > Start in production mode. The real rules are deployed in step 6.
-- AI Logic (left menu) > Get started > choose the **Gemini Developer API**.
+- AI Logic (left menu) > Get started > choose the **Agent Platform Gemini API** and finish every
+  screen (leave AI monitoring off). If AI Logic is already set up: AI Logic > Settings > Agent
+  Platform Gemini API > Enable required APIs.
+- App Check > APIs > Firebase AI Logic must say **Unenforced**: the app does not send App Check
+  tokens yet, so enforcement refuses every AI call ("Firebase App Check token is invalid").
 - Project settings (gear icon) > General > Your apps > Add app > Web (`</>`) > any nickname > Register.
 
 **4. Paste the web app's config.** Project settings > General > Your apps > your web app > SDK setup

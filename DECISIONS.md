@@ -501,6 +501,32 @@ decided where the brief left room. Newest phase last. If a decision turns out wr
      with the SDK's code, HTTP status and message), because the screen shows "could not reach" both
      for a network failure and for every model refusing the request.
 
+### Gemini on the live link (17 October 2026)
+
+What the live link returned, in order, and what was done (each seen in the browser's Network tab):
+
+| Response | Cause | Fix |
+|---|---|---|
+| 400 "Firebase AI Logic genai config not found" | AI Logic's guided setup had never run; the APIs had been enabled another way | Gemini Developer API disabled, then AI Logic > Get started run to the end |
+| 401 "Firebase App Check token is invalid" | The setup turned on App Check enforcement for AI Logic; the app sends no App Check token | App Check > APIs > Firebase AI Logic set to Unenforced |
+| 429 "Your prepayment credits are depleted" | With Cloud Billing linked, the Gemini Developer API is on the paid tier, which needs a prepaid balance in AI Studio; Google's billing page says the $300 trial credits and welcome credits do not cover it | Entry 120 |
+
+120. **The web app's Gemini moves to the Agent Platform Gemini API** (`AgentPlatformBackend` in
+     `lib/ai-firebase.ts`, location `global`). It is billed to the project's Cloud Billing account,
+     whose credits the team holds, instead of a separate prepaid balance. The reading schemas go in
+     `responseSchema`, the OpenAPI form they are written in (`nullable`, `enum`), not
+     `responseJsonSchema`. Voice uses `gemini-live-2.5-flash-native-audio` in `us-central1`, because
+     Agent Platform has no Gemini 3.x Live model and serves its 2.5 Live models outside `global`
+     (Firebase AI Logic's model list). Gemma stays last in the reading chain but is not on that list
+     for Agent Platform, so a refusal just ends the chain. The privacy and AI notices no longer say
+     "free version" or that Google may use what is sent to improve its products (that was the
+     Gemini API's unpaid-services wording); they say what is sent where. Not run against Google
+     from the build environment: the first live test is on the deployed link.
+121. **App Check stays unenforced for AI Logic, and AI monitoring off, for the submission.** Turning
+     App Check on needs a reCAPTCHA provider in the app and testing; until then the budget alert is
+     the guard against misuse of the public web key. AI monitoring was left off because it was not
+     confirmed what it records from the papers people check.
+
 ## Not tested, and why
 
 The build environment cannot reach any Google host, so none of this has run:

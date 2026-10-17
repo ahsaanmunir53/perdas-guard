@@ -1,24 +1,31 @@
-// Carries one model call over Firebase AI Logic, with the Gemini Developer API as the backend.
+// Carries one model call over Firebase AI Logic, with the Agent Platform Gemini API as the backend.
+// Agent Platform is billed to the project's Cloud Billing account (and its credits); the Gemini
+// Developer API would need its own prepaid balance in AI Studio (see DECISIONS, entry 120).
 // Loaded only when a screen first asks the AI for something, so the SDK is not in the first download.
 //
-// NOT RUN AGAINST GOOGLE YET: the build environment could not reach any Google host. The calls
-// below follow the type definitions of firebase 13.0.0 (@firebase/ai 3.0.0). First thing to test
-// with a real project: a text call, a JSON call with a photo, and what a quota error looks like.
+// The calls follow the type definitions of firebase 13.0.0 (@firebase/ai 3.0.0). Run against the
+// project on 16 October 2026 with the Gemini Developer API (which then refused for billing); the
+// Agent Platform backend has not been run against Google from the build environment.
 
-import type { Content, FunctionDeclaration, ObjectSchemaRequest, Part } from "firebase/ai";
+import type { Content, FunctionDeclaration, ObjectSchemaRequest, Part, SchemaRequest } from "firebase/ai";
 import { GeminiProvider, MODEL_CHAIN, OfflineProvider, type AIProvider, type AiPart, type ChatCall, type ChatPart, type ChatTransport, type ChatTurn, type ModelCall, type Transport } from "@/lib/ai";
 import { firebaseEnabled, getFirebaseApp } from "@/lib/firebase";
+
+/** Gemini 3 models on Agent Platform are served from the global endpoint. */
+export const AI_LOCATION = "global";
 
 const toPart = (part: AiPart): Part => ("text" in part ? { type: "text", text: part.text } : { type: "inlineData", inlineData: { mimeType: part.file.mimeType, data: part.file.data } });
 
 export const firebaseTransport: Transport = async (call: ModelCall): Promise<string> => {
-  const [app, { getAI, getGenerativeModel, GoogleAIBackend }] = await Promise.all([getFirebaseApp(), import("firebase/ai")]);
-  const ai = getAI(app, { backend: new GoogleAIBackend() });
+  const [app, { getAI, getGenerativeModel, AgentPlatformBackend }] = await Promise.all([getFirebaseApp(), import("firebase/ai")]);
+  const ai = getAI(app, { backend: new AgentPlatformBackend(AI_LOCATION) });
   const model = getGenerativeModel(ai, {
     model: call.model,
     systemInstruction: call.system,
     // No temperature or penalties: Gemini 3 models ignore the first and reject the second.
-    generationConfig: call.jsonSchema ? { responseMimeType: "application/json", responseJsonSchema: call.jsonSchema } : undefined,
+    // The schemas (lib/engine/reading.ts) are written in the OpenAPI form responseSchema takes
+    // ("nullable", "enum"), not as JSON Schema, so they go in responseSchema.
+    generationConfig: call.jsonSchema ? { responseMimeType: "application/json", responseSchema: call.jsonSchema as unknown as SchemaRequest } : undefined,
   });
   const result = await model.generateContent({ contents: [{ role: "user", parts: call.parts.map(toPart) }] }, { signal: call.signal });
   // text() throws an AIError (response-error) when the answer was blocked.
@@ -40,8 +47,8 @@ const toContent = (turn: ChatTurn): Content => ({ role: turn.role === "model" ? 
 
 /** NOT RUN AGAINST GOOGLE YET (see the top of this file). Follows the firebase 13.0.0 types. */
 export const firebaseChatTransport: ChatTransport = async (call: ChatCall): Promise<ChatTurn> => {
-  const [app, { getAI, getGenerativeModel, GoogleAIBackend }] = await Promise.all([getFirebaseApp(), import("firebase/ai")]);
-  const ai = getAI(app, { backend: new GoogleAIBackend() });
+  const [app, { getAI, getGenerativeModel, AgentPlatformBackend }] = await Promise.all([getFirebaseApp(), import("firebase/ai")]);
+  const ai = getAI(app, { backend: new AgentPlatformBackend(AI_LOCATION) });
   const functionDeclarations: FunctionDeclaration[] = call.tools.map((tool) => ({ name: tool.name, description: tool.description, parameters: tool.parameters as unknown as ObjectSchemaRequest }));
   const model = getGenerativeModel(ai, { model: call.model, systemInstruction: call.system, tools: functionDeclarations.length ? [{ functionDeclarations }] : undefined });
   const result = await model.generateContent({ contents: call.history.map(toContent) }, { signal: call.signal });

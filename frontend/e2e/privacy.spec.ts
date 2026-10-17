@@ -33,7 +33,7 @@ test("the privacy page says what is kept, what goes to Gemini, and what never is
   await page.goto("/en/privacy/");
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("What we keep, and where");
   await expect(page.getByText("Vault files always stay on the phone, even with an account.", { exact: false })).toBeVisible();
-  await expect(page.getByText("Google may use what is sent to improve its products", { exact: false })).toBeVisible();
+  await expect(page.getByText("They are sent to Google's Gemini on Google Cloud", { exact: false })).toBeVisible();
   await expect(page.getByText("The app never asks for a government website password", { exact: false })).toBeVisible();
 });
 

@@ -6,13 +6,17 @@
 //   - the app's functions: a call from the model runs here and its answer goes back as data.
 //
 // NOT RUN AGAINST GOOGLE YET: the build environment could not reach any Google host. The calls
-// follow the firebase 13.0.0 type definitions. The live model id comes from the brief.
+// follow the firebase 13.0.0 type definitions. The backend is Agent Platform, like the rest of the
+// app's AI (lib/ai-firebase.ts). Agent Platform has no Gemini 3.x Live model, and its 2.5 Live models
+// are not served from the global location, so voice uses the 2.5 native-audio model in us-central1
+// (Firebase AI Logic's model list, read on 17 October 2026).
 
 import type { AiFailure, ToolSpec } from "@/lib/ai";
 import { classifyError } from "@/lib/ai";
 import { runTool, type ToolDeps } from "@/lib/assistant-tools";
 
-export const LIVE_MODEL = "gemini-3.1-flash-live-preview";
+export const LIVE_MODEL = "gemini-live-2.5-flash-native-audio";
+export const LIVE_LOCATION = "us-central1";
 
 export type LiveFailure = AiFailure | "mic-denied" | "no-mic" | "unsupported";
 
@@ -76,7 +80,7 @@ export async function startLive(opts: {
   let session: { close: () => Promise<void> } | null = null;
   try {
     const [{ getFirebaseApp }, sdk] = await Promise.all([import("@/lib/firebase"), import("firebase/ai")]);
-    const ai = sdk.getAI(await getFirebaseApp(), { backend: new sdk.GoogleAIBackend() });
+    const ai = sdk.getAI(await getFirebaseApp(), { backend: new sdk.AgentPlatformBackend(LIVE_LOCATION) });
     const functionDeclarations = (opts.tools ?? []).map((t) => ({ name: t.name, description: t.description, parameters: t.parameters as never }));
     const model = sdk.getLiveGenerativeModel(ai, {
       model: LIVE_MODEL,

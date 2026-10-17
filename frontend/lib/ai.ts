@@ -1,6 +1,6 @@
 // The app's one door to Gemini.
 //
-//   GeminiProvider   Firebase AI Logic with the Gemini Developer API (lib/ai-firebase.ts carries the
+//   GeminiProvider   Firebase AI Logic with the Agent Platform Gemini API (lib/ai-firebase.ts carries the
 //                    request). Walks a chain of models, so running out of free quota on one moves
 //                    to the next instead of failing.
 //   OfflineProvider  answers "off" to everything. Used when the app is built without Firebase, and
@@ -101,10 +101,10 @@ export interface ModelSpec {
 }
 
 /**
- * Tried in this order. All three have a free tier on the Gemini Developer API (October 2026).
- * gemini-3.1-pro-preview is deliberately absent: it has no free tier.
- * TODO(verify): confirm Firebase AI Logic accepts the Gemma model id. If it does not, the request
- * fails and the chain simply ends one step earlier.
+ * Tried in this order. Both Gemini models are on Firebase AI Logic's model list (October 2026).
+ * gemini-3.1-pro-preview is deliberately absent: it is the slow, costly one.
+ * Gemma is not on that list for Agent Platform: if the request is refused, the chain simply ends
+ * one step earlier (a 400 or 404 moves on to the next model).
  */
 export const MODEL_CHAIN: readonly ModelSpec[] = [
   { id: "gemini-3.8-flash", json: "native", system: true },
