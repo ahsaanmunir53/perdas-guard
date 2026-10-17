@@ -3,12 +3,13 @@
 // Developer API would need its own prepaid balance in AI Studio (see DECISIONS, entry 120).
 // Loaded only when a screen first asks the AI for something, so the SDK is not in the first download.
 //
-// The calls follow the type definitions of firebase 13.0.0 (@firebase/ai 3.0.0). Run against the
-// project on 16 October 2026 with the Gemini Developer API (which then refused for billing); the
-// Agent Platform backend has not been run against Google from the build environment.
+// The calls follow the type definitions of firebase 13.0.0 (@firebase/ai 3.0.0). On the live link on
+// 17 October 2026, reading a paper through the Agent Platform backend returned 200; the assistant's
+// function calling then failed with 400 until the thought signatures were kept (lib/ai-chat-wire.ts).
 
-import type { Content, FunctionDeclaration, ObjectSchemaRequest, Part, SchemaRequest } from "firebase/ai";
-import { GeminiProvider, MODEL_CHAIN, OfflineProvider, type AIProvider, type AiPart, type ChatCall, type ChatPart, type ChatTransport, type ChatTurn, type ModelCall, type Transport } from "@/lib/ai";
+import type { FunctionDeclaration, ObjectSchemaRequest, Part, SchemaRequest } from "firebase/ai";
+import { GeminiProvider, MODEL_CHAIN, OfflineProvider, type AIProvider, type AiPart, type ChatCall, type ChatTransport, type ChatTurn, type ModelCall, type Transport } from "@/lib/ai";
+import { modelTurnFrom, toContents } from "@/lib/ai-chat-wire";
 import { firebaseEnabled, getFirebaseApp } from "@/lib/firebase";
 
 /** Gemini 3 models on Agent Platform are served from the global endpoint. */
@@ -32,29 +33,21 @@ export const firebaseTransport: Transport = async (call: ModelCall): Promise<str
   return result.response.text();
 };
 
-const toChatPart = (part: ChatPart): Part =>
-  "text" in part
-    ? { type: "text", text: part.text }
-    : "functionCall" in part
-      ? { type: "functionCall", functionCall: { name: part.functionCall.name, args: part.functionCall.args, id: part.functionCall.id } }
-      : { type: "functionResponse", functionResponse: { name: part.functionResponse.name, response: part.functionResponse.response, id: part.functionResponse.id } };
-
 /**
- * Function results go back with the "user" role: the SDK itself does so for Gemini 3.6 and later
- * (assignRoleToPartsAndValidateSendMessageRequest in @firebase/ai 3.0.0).
+ * One turn of a conversation. The history goes out with the thought signatures Gemini sent
+ * (lib/ai-chat-wire.ts): without them Agent Platform answered 400 to the request after a function
+ * call, on the live link on 17 October 2026.
  */
-const toContent = (turn: ChatTurn): Content => ({ role: turn.role === "model" ? "model" : "user", parts: turn.parts.map(toChatPart) });
-
-/** NOT RUN AGAINST GOOGLE YET (see the top of this file). Follows the firebase 13.0.0 types. */
 export const firebaseChatTransport: ChatTransport = async (call: ChatCall): Promise<ChatTurn> => {
   const [app, { getAI, getGenerativeModel, AgentPlatformBackend }] = await Promise.all([getFirebaseApp(), import("firebase/ai")]);
   const ai = getAI(app, { backend: new AgentPlatformBackend(AI_LOCATION) });
   const functionDeclarations: FunctionDeclaration[] = call.tools.map((tool) => ({ name: tool.name, description: tool.description, parameters: tool.parameters as unknown as ObjectSchemaRequest }));
   const model = getGenerativeModel(ai, { model: call.model, systemInstruction: call.system, tools: functionDeclarations.length ? [{ functionDeclarations }] : undefined });
-  const result = await model.generateContent({ contents: call.history.map(toContent) }, { signal: call.signal });
-  const calls = result.response.functionCalls() ?? [];
-  if (calls.length) return { role: "model", parts: calls.map((c) => ({ functionCall: { name: c.name, args: (c.args ?? {}) as Record<string, unknown>, id: c.id } })) };
-  return { role: "model", parts: [{ text: result.response.text() }] };
+  const result = await model.generateContent({ contents: toContents(call.history, call.model) }, { signal: call.signal });
+  const turn: ChatTurn = modelTurnFrom(result.response.candidates?.[0]?.content?.parts, call.model);
+  // An empty answer: text() throws the SDK's error when it was blocked, which says why.
+  if (!turn.parts.length) result.response.text();
+  return turn;
 };
 
 let provider: AIProvider | null = null;

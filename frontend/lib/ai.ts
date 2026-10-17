@@ -59,14 +59,20 @@ export interface AIProvider {
 
 // ---- Conversations with the app's functions (the assistant, interview practice in text) -----------
 
+/**
+ * One part of a turn. `thoughtSignature` is the opaque value Gemini 3 attaches to its answer; it is
+ * sent back unchanged in the next request (lib/ai-chat-wire.ts).
+ */
 export type ChatPart =
-  | { text: string }
-  | { functionCall: { name: string; args: Record<string, unknown>; id?: string } }
+  | { text: string; thoughtSignature?: string }
+  | { functionCall: { name: string; args: Record<string, unknown>; id?: string }; thoughtSignature?: string }
   | { functionResponse: { name: string; response: Record<string, unknown>; id?: string } };
 
 export interface ChatTurn {
   role: "user" | "model";
   parts: ChatPart[];
+  /** For a model turn: the model that wrote it, since a thought signature only works with that model. */
+  model?: string;
 }
 
 /** A function the model may ask the app to run. The app runs it and sends the answer back as data. */

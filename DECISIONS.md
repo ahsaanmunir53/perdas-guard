@@ -549,6 +549,16 @@ What the live link returned, in order, and what was done (each seen in the brows
      service account exists: Cloud Build uses it in new projects, and `setup.sh` grants it a role. On
      `pardes-ea3e1` it was enabled by hand just before `setup.sh` ran.
 
+125. **The assistant keeps Gemini's thought signatures** (`lib/ai-chat-wire.ts`). On the live link
+     the assistant's first request got a function call back (200) and the request carrying the
+     function's result got a 400 within a second, from both models in the chain. Gemini 3 attaches
+     a thought signature to a function call and requires it back in the next request; the app
+     rebuilt the history without it. Each model turn now keeps its parts' signatures and the model
+     that wrote them; a call written by another model (a fallback mid-conversation) gets the
+     placeholder from Google's thought-signature guide on its first call. A local capture of the
+     SDK's request shows `thoughtSignature` reaching the wire beside `functionCall`. Not yet run
+     against Google.
+
 ## Not tested, and why
 
 Updated 17 October 2026: the deployed API now has passed its live check (entry 122), and the live
