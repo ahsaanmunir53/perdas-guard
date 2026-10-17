@@ -19,7 +19,10 @@ MODE="${MODE:-demo}"
 REGION="${REGION:-asia-south1}"
 BUCKET="${BUCKET:-${PROJECT_ID}-pardes-evidence}"
 FIRESTORE_DATABASE="${FIRESTORE_DATABASE:-pardes-api}"
+# Model Armor templates live in a multi-region, served from its own regional endpoint; without the
+# override gcloud answers PERMISSION_DENIED ("Write access to project ... was denied").
 MODEL_ARMOR_LOCATION="${MODEL_ARMOR_LOCATION:-us}"
+export CLOUDSDK_API_ENDPOINT_OVERRIDES_MODELARMOR="https://modelarmor.${MODEL_ARMOR_LOCATION}.rep.googleapis.com/"
 SERVICE="${SERVICE:-pardes-guard-api}"
 MAX_INSTANCES="${MAX_INSTANCES:-3}"
 API_SA="pardes-api@${PROJECT_ID}.iam.gserviceaccount.com"

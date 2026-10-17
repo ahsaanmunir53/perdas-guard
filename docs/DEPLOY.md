@@ -158,5 +158,6 @@ Sensitive Data Protection, Model Armor, Secret Manager and Cloud Scheduler. Ever
 Cloud Shell with two scripts, then checked end to end with `backend/app/scripts/live_check.py`, which
 writes `backend/LIVE_CHECK.md`. Steps, costs and how to take it down: [`infra/CLOUD_RUN.md`](../infra/CLOUD_RUN.md).
 
-Until `backend/LIVE_CHECK.md` exists and passes, the README and the deck say nothing more about the
-API than the sentence under "How it is built" in the README.
+The API was deployed on 17 October 2026 and its live check passed 13 of 13
+([`backend/LIVE_CHECK.md`](../backend/LIVE_CHECK.md)). The README and the deck name a service of the
+API only if that check, or the log check after it in `infra/CLOUD_RUN.md`, shows it working.

@@ -525,9 +525,35 @@ What the live link returned, in order, and what was done (each seen in the brows
 121. **App Check stays unenforced for AI Logic, and AI monitoring off, for the submission.** Turning
      App Check on needs a reCAPTCHA provider in the app and testing; until then the budget alert is
      the guard against misuse of the public web key. AI monitoring was left off because it was not
-     confirmed what it records from the papers people check.
+     confirmed what it records from the papers people check. Firebase's App Check page says that
+     from 2 November 2026 App Check enforcement will be required to use Firebase AI Logic; if the
+     live link must keep its AI after that date, the app needs App Check with reCAPTCHA Enterprise
+     before then.
+
+### Production API deployed (17 October 2026)
+
+122. **The API runs on Cloud Run in `pardes-ea3e1`** (asia-south1, sandbox mode), deployed from Cloud
+     Shell with `infra/setup.sh` and `infra/deploy.sh`. `live_check.py` passed 13 of 13 against it
+     (`backend/LIVE_CHECK.md`, written by the run, copied into the repository unchanged). Cloud Run's
+     logs for that hour have no "Model Armor screen failed" or "Sensitive Data Protection pass
+     failed" warning, which is the evidence that those two ran: both fall back to the local screen
+     silently, so a PASS alone would not show it. The case timer, run once with
+     `gcloud scheduler jobs run pardes-case-tick`, got a 200 (Cloud Run request log) and the job shows
+     no error; the same log query returning that line shows the empty warning query was not a
+     broken query.
+123. **Both scripts point gcloud at Model Armor's regional endpoint**
+     (`CLOUDSDK_API_ENDPOINT_OVERRIDES_MODELARMOR`). Without it, `gcloud model-armor templates create`
+     answered PERMISSION_DENIED for the project owner; with it the template was created. The API
+     itself already called the regional endpoint.
+124. **`setup.sh` enables `compute.googleapis.com` first**, so that the Compute Engine default
+     service account exists: Cloud Build uses it in new projects, and `setup.sh` grants it a role. On
+     `pardes-ea3e1` it was enabled by hand just before `setup.sh` ran.
 
 ## Not tested, and why
+
+Updated 17 October 2026: the deployed API now has passed its live check (entry 122), and the live
+link's paper check got a 200 from Gemini on Agent Platform (entry 120). The list below is otherwise
+as it was written before anything ran against Google.
 
 The build environment cannot reach any Google host, so none of this has run:
 

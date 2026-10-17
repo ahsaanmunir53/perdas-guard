@@ -18,6 +18,9 @@ services it was written for:
 
 The live app (`frontend/`, Firebase Hosting) does not call this API and keeps working as it is.
 
+Deployed on 17 October 2026 at https://pardes-guard-api-4ycjladhqa-el.a.run.app (docs at `/api/docs`);
+the end-to-end check passed 13 of 13 ([`backend/LIVE_CHECK.md`](../backend/LIVE_CHECK.md)).
+
 It runs in **sandbox mode** (`MODE=demo`) so judges can use it: the API docs are at `/api/docs`, nobody
 signs in, every caller is a worker, and the staff routes answer 403. `MODE=prod` switches to Firebase
 sign-in with no docs.
@@ -59,6 +62,10 @@ It enables the APIs, creates the service accounts and their roles, the `pardes-a
 database, the evidence bucket, the KMS key, the two secrets, the Model Armor template, and the Spanner
 free trial instance with the `integrity` database and its schema.
 
+Model Armor is served from its own regional endpoint (`modelarmor.us.rep.googleapis.com`); both
+scripts point gcloud at it. Without that, creating the template answers PERMISSION_DENIED ("Write
+access to project ... was denied") even for the project owner.
+
 If the Spanner step says the configuration is not available for a free trial, list the regional ones
 and run step 3 again with one of them:
 
@@ -86,6 +93,14 @@ Every line should say PASS: Gemini reads the paper, the hidden instruction is ca
 the check for its owner only, the shared phone links two made-up agencies in Spanner Graph, KMS signs
 the evidence and the chain verifies, the ADK assistant answers, and speech comes back. A SKIP on speech
 is fine. Send the output if anything says FAIL.
+
+Model Armor and Sensitive Data Protection never block a check: if a call to either fails, the API
+logs a warning and uses its local screen instead, so a PASS above does not prove they ran. Check the
+logs for that run; this should print nothing:
+
+```bash
+gcloud logging read 'resource.type="cloud_run_revision" AND resource.labels.service_name="pardes-guard-api" AND ("Model Armor screen failed" OR "Sensitive Data Protection pass failed")' --freshness=1h --limit=10 --format='value(timestamp)'
+```
 
 **6. Spanner against the real instance (optional, a few minutes)**
 

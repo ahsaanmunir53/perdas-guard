@@ -14,8 +14,10 @@ set -euo pipefail
 REGION="${REGION:-asia-south1}"
 # The API's own Firestore database; the web app keeps "(default)" for its documents.
 FIRESTORE_DATABASE="${FIRESTORE_DATABASE:-pardes-api}"
-# Model Armor templates live in a multi-region; "us" needs no endpoint override.
+# Model Armor templates live in a multi-region, served from its own regional endpoint; without the
+# override gcloud answers PERMISSION_DENIED ("Write access to project ... was denied").
 MODEL_ARMOR_LOCATION="${MODEL_ARMOR_LOCATION:-us}"
+export CLOUDSDK_API_ENDPOINT_OVERRIDES_MODELARMOR="https://modelarmor.${MODEL_ARMOR_LOCATION}.rep.googleapis.com/"
 BUCKET="${BUCKET:-${PROJECT_ID}-pardes-evidence}"
 API_SA="pardes-api@${PROJECT_ID}.iam.gserviceaccount.com"
 SCHED_SA="scheduler-invoker@${PROJECT_ID}.iam.gserviceaccount.com"
@@ -26,7 +28,7 @@ gcloud config set project "$PROJECT_ID" >/dev/null
 
 echo "== Enabling APIs"
 gcloud services enable \
-  run.googleapis.com cloudbuild.googleapis.com artifactregistry.googleapis.com \
+  compute.googleapis.com run.googleapis.com cloudbuild.googleapis.com artifactregistry.googleapis.com \
   firestore.googleapis.com storage.googleapis.com cloudkms.googleapis.com secretmanager.googleapis.com \
   cloudscheduler.googleapis.com aiplatform.googleapis.com dlp.googleapis.com modelarmor.googleapis.com \
   firebase.googleapis.com identitytoolkit.googleapis.com logging.googleapis.com

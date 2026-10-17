@@ -9,9 +9,9 @@ for their families. It shows every step of the journey, what each step should re
 an agent and their papers for warning signs before anyone pays. If something goes wrong abroad, it
 helps the person write letters they send themselves and keeps their evidence safe.
 
-| Live app | Demo video (under 3 minutes) | Deck (PDF) |
-|---|---|---|
-| Not deployed yet: the link goes here after the first deploy ([`docs/DEPLOY.md`](docs/DEPLOY.md), step 6) | To be added | To be added |
+| Live app | API sandbox | Demo video (under 3 minutes) | Deck (PDF) |
+|---|---|---|---|
+| [pardes-ea3e1.web.app](https://pardes-ea3e1.web.app) | [API docs on Cloud Run](https://pardes-guard-api-4ycjladhqa-el.a.run.app/api/docs) | To be added | To be added |
 
 Built for the Google Cloud AI Builder Cup 2026, Sustainability & Social Impact track.
 
@@ -167,11 +167,15 @@ flowchart TB
   run --> gcp
 ```
 
-The live app runs on Firebase (Hosting, Authentication and Firestore) with Gemini on Agent Platform through Firebase AI Logic. The production design, with ADK agents on Cloud Run, Cloud KMS-signed evidence, Sensitive Data Protection, Model Armor and a Spanner Graph fraud network, is implemented in the repository with unit tests and deployment scripts.
+The live app runs on Firebase Hosting with Firebase Authentication, Firestore and Gemini on Agent
+Platform through Firebase AI Logic. The production API runs on Cloud Run: ADK agents with Gemini on
+Gemini Enterprise Agent Platform, Firestore, a Spanner Graph fraud network, Cloud KMS-signed evidence,
+Sensitive Data Protection, Model Armor, Secret Manager and Cloud Scheduler.
+[`backend/LIVE_CHECK.md`](backend/LIVE_CHECK.md) records the end-to-end check of the deployed API.
 
-The live app does not call the API. The API has not yet been run against live Google services:
-[`infra/CLOUD_RUN.md`](infra/CLOUD_RUN.md) deploys it, and `backend/LIVE_CHECK.md` will record the
-end-to-end check, service by service.
+The live app does not call the API. The API runs as a sandbox (nobody signs in, every caller is treated
+as a worker, staff routes are closed) so it can be tried from its docs page; [`infra/CLOUD_RUN.md`](infra/CLOUD_RUN.md)
+deploys it.
 
 ### Google Cloud and Firebase services
 
@@ -280,11 +284,20 @@ four machine-drafted languages, text at 200% with no sideways scrolling, keyboar
 kit with the server stopped, the NGO warning reaching a worker's check, and an imported licensed list
 reaching the agent search.
 
-Run against Google once, on a team member's computer: the API's smoke check with a real Gemini key
-read the made-up offer, caught its hidden instruction and gave a red result.
+The deployed API on Cloud Run, 17 October 2026 ([`backend/LIVE_CHECK.md`](backend/LIVE_CHECK.md), 13
+of 13 passed, made-up papers only): Gemini on Agent Platform read the made-up offer, its hidden
+instruction was flagged and the result was red; Firestore kept the check for its owner and answered
+404 to anyone else; Spanner Graph linked two made-up agencies through a shared phone; Cloud KMS signed
+the evidence, the file went to Cloud Storage and the chain verified; the ADK assistant answered using
+one of its tools; and speech came back. Cloud Run's logs for that run show no fallback from Model Armor
+or Sensitive Data Protection to the local screens, and Cloud Scheduler's case timer, run once by hand,
+got a 200 from the API.
 
-Not run against Google yet: the live app's Gemini and Gemini Live calls, Google sign-in, Firestore and
-its rules, the deployed API on Cloud Run, and a real phone (fonts, voices, microphone, camera).
+On the live link: a paper check's Gemini call through Firebase AI Logic returned 200 from the Agent
+Platform endpoint.
+
+Not run against Google yet: the live app's Gemini Live calls (voice), Google sign-in, Firestore and its
+rules from the live app, and a real phone (fonts, voices, microphone, camera).
 
 Content to check before real people use it: every country pack item (all draft), the recruiter list
 (a fictional sample until an admin imports the official CSV), Pakistan's legal maximum recruitment fee,
